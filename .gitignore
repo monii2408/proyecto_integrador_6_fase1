@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editores / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Salidas temporales (las figuras y CSV finales SÍ se versionan)
+*.tmp
+*.log
+
+# Grabaciones grandes: se versionan porque son evidencia; si el repo crece
+# demasiado, mover a la nube y dejar aquí solo un enlace en el README.
