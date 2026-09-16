@@ -146,3 +146,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Coordinar con Rodrigo la grabación de las 12 notas reales en `audio/originales/` para repetir esta evaluación sobre señales reales (hito del 18 sep) |
 | Responsable | Monica |
 | Evidencia | `src/evaluacion.py`, `datos/resultados.csv`, salida de consola |
+
+## Entrada 10 — 16 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/prueba_armonicos.py: robustez frente a armónicos" |
+| Objetivo | Verificar que `deteccion.py` encuentra la fundamental y no un armónico, antes de usar grabaciones reales |
+| Parámetros | Fundamental + 4 armónicos, amplitudes [1.0, 0.6, 0.4, 0.25, 0.15], 12 notas Do4–Si4 |
+| Qué se probó | Pipeline completo sobre tonos sintéticos con armónicos, guardados en `audio/sinteticos/armonicos/` |
+| Resultado | Error idéntico al de las senoides puras (máximo 0.430 cents); ningún caso confundió la fundamental con un armónico, incluido Si4 (2do armónico ≈988 Hz, dentro del rango de búsqueda) |
+| Fallo o aprendizaje | Ninguno; la combinación de rango 80–1000 Hz + criterio de magnitud máxima resultó robusta frente a armónicos con la relación de amplitudes probada. Queda pendiente probar con ruido de fondo |
+| Decisión siguiente | Pedirle a Rodrigo 2–3 grabaciones reales para validar contra el hito del 18 sep; en paralelo, considerar prueba de robustez con ruido |
+| Responsable | Monica |
+| Evidencia | `src/prueba_armonicos.py`, `audio/sinteticos/armonicos/*.wav`, salida de consola |
