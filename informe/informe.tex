@@ -1,0 +1,152 @@
+\documentclass[11pt]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[backend=biber,style=numeric]{biblatex}
+\addbibresource{bibliografia.bib}
+
+\title{Analizador de Notas Musicales mediante FFT \\ \large Proyecto Integrador 6 --- Fase 1}
+\author{Monica Daniela Alvarenga Mejia \and Rodrigo José Marroquín Quijada}
+\date{Instituto Kriete de Ingeniería y Ciencias --- Señales y Sistemas (EE2004)}
+
+\begin{document}
+\maketitle
+
+\section{Introducción}
+% TODO: motivación, alcance de la Fase 1 y resumen de resultados (depende de
+% los resultados finales; redactar al cierre).
+
+\section{Modelo matemático}
+\label{sec:modelo}
+
+\subsection{Muestreo y teorema de Nyquist}
+La señal continua $x(t)$ captada por el micrófono se muestrea a
+$f_s = 48\,000$~Hz, produciendo la secuencia discreta $x[n] = x(nT_s)$, con
+$T_s = 1/f_s$. Las doce notas de la octava Do4--Si4 tienen frecuencias
+fundamentales entre 261{,}63~Hz y 493{,}88~Hz. Considerando los armónicos de
+interés hasta unos 4~kHz, el teorema de muestreo de Nyquist--Shannon exige
+$f_s > 2 \cdot 4\,000 = 8\,000$~Hz; los 48~kHz elegidos dan un margen de más
+de cinco veces ese contenido espectral, lo que permite además observar el
+caso --- frecuente en instrumentos reales --- en que un armónico aparece con
+mayor amplitud que la fundamental \cite{oppenheim2010,rossing1990science}.
+
+\subsection{Transformada discreta de Fourier (DFT/FFT)}
+Sobre cada segmento preprocesado de $N$ muestras se calcula la DFT
+
+\begin{equation}
+  X[k] = \sum_{n=0}^{N-1} x[n]\, e^{-j 2\pi k n / N}, \qquad k = 0, \dots, N-1,
+\end{equation}
+
+evaluada de forma eficiente mediante el algoritmo FFT (\texttt{np.fft.rfft},
+que aprovecha la simetría hermítica de una señal real). El eje de
+frecuencias correspondiente a cada bin $k$ es
+
+\begin{equation}
+  f_k = \frac{k \cdot f_s}{N},
+\end{equation}
+
+lo que con $N = 32\,768$ da una resolución de bin
+$\Delta f = f_s/N \approx 1{,}465$~Hz \cite{oppenheim2010,smith2007mdft}.
+
+\subsection{Ventaneo de Hann}
+Analizar un segmento finito de la señal equivale a multiplicarlo por una
+ventana rectangular, lo que produce fuga espectral (\emph{spectral leakage})
+y dificulta separar la fundamental de picos vecinos. Se aplica en su lugar
+una ventana de Hann,
+
+\begin{equation}
+  w[n] = 0{,}5 \left(1 - \cos\!\left(\frac{2\pi n}{N-1}\right)\right),
+\end{equation}
+
+que reduce los lóbulos laterales a costa de ensanchar ligeramente el lóbulo
+principal, un compromiso favorable para localizar picos aislados
+\cite{harris1978windows}.
+
+\subsection{Interpolación parabólica del pico}
+% TODO (17/09): una vez implementada en preprocess/fft_pipeline, confirmar
+% que la fórmula usada coincide exactamente con esta y referenciar el
+% módulo correspondiente.
+La resolución de bin $\Delta f \approx 1{,}465$~Hz no es suficiente por sí
+sola para cumplir el criterio de error de 5~cents en Do4 (que equivale a
+$\approx 0{,}76$~Hz). Se refina la ubicación del pico ajustando una parábola
+a la magnitud (en dB) del bin máximo $\beta$ y sus vecinos $\alpha$
+(izquierdo) y $\gamma$ (derecho):
+
+\begin{equation}
+  \delta = \frac{1}{2} \cdot \frac{\alpha - \gamma}{\alpha - 2\beta + \gamma},
+  \qquad
+  f_0 = (k + \delta) \cdot \frac{f_s}{N},
+\end{equation}
+
+donde $k$ es el índice del bin de máxima magnitud \cite{smith2007mdft}.
+
+\subsection{Identificación de la nota y error en cents}
+La frecuencia de referencia de cada nota $n$ semitonos por encima o debajo
+de La4 sigue el temperamento igual,
+
+\begin{equation}
+  f_n = 440 \cdot 2^{(n-49)/12} \; \text{Hz}, \qquad \text{La4} = 440~\text{Hz}
+  \;\; \cite{iso16-1975},
+\end{equation}
+
+y el error de la frecuencia detectada $f_0$ respecto de la tabla se expresa
+en cents (1/100 de semitono):
+
+\begin{equation}
+  \text{error}_{\text{cents}} = 1200 \cdot \log_2\!\left(\frac{f_0}{f_{\text{tabla}}}\right).
+\end{equation}
+
+\section{Metodología}
+\label{sec:metodologia}
+
+\subsection{Adquisición}
+Cada una de las doce notas de la octava Do4--Si4 se graba de forma
+individual con el micrófono y la tarjeta de sonido de la laptop, en
+archivos WAV de aproximadamente 1~s de duración. Los primeros 50--100~ms de
+cada grabación (el ataque del martillo sobre la cuerda, con transitorios de
+alta energía y contenido espectral no estacionario) se descartan antes del
+análisis. Las grabaciones originales se conservan sin modificar en
+\texttt{audio/originales/} como evidencia de adquisición; todo el
+procesamiento se realiza sobre copias en \texttt{audio/procesados/}.
+
+\subsection{Pipeline de procesamiento}
+El pipeline es el mismo para los tonos sintéticos (usados para validar el
+código antes de introducir señales reales) y para las grabaciones reales:
+
+\begin{enumerate}
+  \item \textbf{Preprocesamiento}: conversión a mono, remoción de offset DC,
+    recorte del ataque, ventana de Hann (Sección~\ref{sec:modelo}).
+  \item \textbf{FFT}: \texttt{np.fft.rfft} sobre la señal ventaneada; eje de
+    frecuencias con \texttt{np.fft.rfftfreq(N, 1/fs)}.
+  \item \textbf{Detección de pico}: máximo de magnitud en la banda
+    80--1000~Hz, que cubre las fundamentales de Do4 a Si4 sin confundirlas
+    con armónicos graves de notas más bajas.
+  \item \textbf{Refinamiento sub-bin}: interpolación parabólica
+    (Sección~\ref{sec:modelo}).
+  \item \textbf{Identificación y error}: comparación contra la tabla de
+    temperamento igual y cálculo del error en cents.
+\end{enumerate}
+
+Un tono sintético con frecuencia conocida sirve como caso de control: si el
+pipeline falla sobre él, el error está en el código; si el sintético pasa y
+la grabación real falla, el problema es de captura o de la señal física, no
+del algoritmo.
+
+\subsection{Validación}
+% TODO: completar con los resultados reales (sintéticos con interpolación +
+% grabaciones reales) cuando estén disponibles. No adelantar números aquí.
+
+\section{Resultados}
+% TODO: pendiente de la interpolación parabólica y de las grabaciones
+% reales verificadas en Audacity.
+
+\section{Discusión}
+% TODO.
+
+\printbibliography
+
+\end{document}
