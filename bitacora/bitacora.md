@@ -118,3 +118,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Implementar `src/deteccion.py`: buscar el pico en 80–1000 Hz e interpolar parabólicamente |
 | Responsable | Monica |
 | Evidencia | `src/espectro.py`, salida de consola |
+
+## Entrada 08 — 16 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/deteccion.py: pico en 80-1000 Hz e interpolación parabólica" |
+| Objetivo | Implementar la estimación fina de f0 (ecuaciones 15, 16 del plan) — paso crítico para el criterio de 5 cents |
+| Parámetros | Rango de búsqueda 80–1000 Hz, N=32768, probado sobre las 12 notas sintéticas Do4–Si4 |
+| Qué se probó | `detectar_f0` sobre cada uno de los 12 tonos sintéticos, comparando contra `notas.py` |
+| Resultado | Error máximo de 0.430 cents (Do#4), mínimo 0.049 cents (Mi4); Do4 (caso crítico) = 0.422 cents. Las 12 notas < 1 cent, muy por debajo del umbral de 5 |
+| Fallo o aprendizaje | Ninguno; la interpolación parabólica redujo el error de ~3.8 cents (bin crudo, ver Entrada 07) a menos de 1 cent en todos los casos |
+| Decisión siguiente | Implementar `src/evaluacion.py`: identificar la nota por proximidad de frecuencia, calcular tasa de reconocimiento y `datos/resultados.csv` |
+| Responsable | Monica |
+| Evidencia | `src/deteccion.py`, salida de consola (12 notas) |
