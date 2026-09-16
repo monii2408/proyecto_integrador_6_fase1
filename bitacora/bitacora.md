@@ -90,3 +90,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Implementar `src/preprocesamiento.py` y validarlo contra estos tonos sintéticos |
 | Responsable | Monica |
 | Evidencia | `src/generar_sintetico.py`, `audio/sinteticos/*.wav`, salida de consola |
+
+## Entrada 06 — 16 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/preprocesamiento.py: carga, normalización y recorte del ataque" |
+| Objetivo | Implementar la etapa de preprocesamiento (sec. 3.4 del plan) |
+| Parámetros | ms_descarte = 75 ms (default), probado sobre `Do4.wav` (sintético, fs=48000) |
+| Qué se probó | Ejecución de `src/preprocesamiento.py` sobre el tono sintético de Do4 |
+| Resultado | fs=48000 Hz, 44 400 muestras tras recorte (48000 − 3600), pico normalizado = 1.000 |
+| Fallo o aprendizaje | Ninguno; la aritmética del recorte y la normalización coinciden con lo esperado |
+| Decisión siguiente | Implementar `src/espectro.py` (ventana de Hann + FFT) |
+| Responsable | Monica |
+| Evidencia | `src/preprocesamiento.py`, salida de consola |
