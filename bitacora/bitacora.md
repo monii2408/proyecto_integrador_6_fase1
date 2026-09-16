@@ -76,3 +76,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Implementar `src/preprocesamiento.py` (carga, normalización, recorte del ataque) |
 | Responsable | Monica |
 | Evidencia | `src/notas.py`, salida de consola de la sesión |
+
+## Entrada 05 — 16 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/generar_sintetico.py: tonos sintéticos para validación" |
+| Objetivo | Generar señales de frecuencia conocida para validar el pipeline antes de usar grabaciones reales |
+| Parámetros | fs = 48 000 Hz, duración 1 s, amplitud 0.5, 12 notas Do4–Si4 (frecuencias de `notas.py`) |
+| Qué se probó | Ejecución de `src/generar_sintetico.py`; lectura de `Do4.wav` para verificar fs, duración y dtype |
+| Resultado | 12 archivos WAV generados en `audio/sinteticos/`; `Do4.wav` verificado: fs=48000, 48000 muestras (1 s), int16 |
+| Fallo o aprendizaje | Ninguno; generación y escritura funcionaron al primer intento |
+| Decisión siguiente | Implementar `src/preprocesamiento.py` y validarlo contra estos tonos sintéticos |
+| Responsable | Monica |
+| Evidencia | `src/generar_sintetico.py`, `audio/sinteticos/*.wav`, salida de consola |
