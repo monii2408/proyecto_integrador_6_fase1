@@ -62,3 +62,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Generar tonos sintéticos de frecuencia conocida (audio/sinteticos/) |
 | Responsable | |
 | Evidencia | |
+
+## Entrada 04 — 16 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/notas.py: tabla de frecuencias del temperamento igual" |
+| Objetivo | Implementar la tabla de frecuencias del temperamento igual, primer eslabón del pipeline |
+| Parámetros | La4 = 440 Hz, teclas 40–51 (Do4–Si4) |
+| Qué se probó | Ejecución de `src/notas.py`, impresión de la tabla de las 12 notas |
+| Resultado | Do4 = 261.626 Hz, La4 = 440.000 Hz — coinciden con los valores estándar de referencia |
+| Fallo o aprendizaje | Ninguno; ecuación (7) validada directamente contra valores conocidos |
+| Decisión siguiente | Implementar `src/preprocesamiento.py` (carga, normalización, recorte del ataque) |
+| Responsable | Monica |
+| Evidencia | `src/notas.py`, salida de consola de la sesión |
