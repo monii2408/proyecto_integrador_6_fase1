@@ -132,3 +132,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Implementar `src/evaluacion.py`: identificar la nota por proximidad de frecuencia, calcular tasa de reconocimiento y `datos/resultados.csv` |
 | Responsable | Monica |
 | Evidencia | `src/deteccion.py`, salida de consola (12 notas) |
+
+## Entrada 09 — 16 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/evaluacion.py: identificación, error en cents y tasa de reconocimiento" |
+| Objetivo | Cerrar el pipeline de extremo a extremo (ecuación 9) y generar `datos/resultados.csv` |
+| Parámetros | Las 12 notas sintéticas Do4–Si4, tabla de `notas.py` |
+| Qué se probó | `evaluar_conjunto` sobre `audio/sinteticos/`, guardado de `datos/resultados.csv` |
+| Resultado | 100% de reconocimiento (12/12); error máximo 0.430 cents (Do#4), Do4 = 0.422 cents. Ambos criterios de éxito de la Fase 1 se cumplen sobre sintéticos |
+| Fallo o aprendizaje | Ninguno; el pipeline completo (`notas→preprocesamiento→espectro→deteccion→evaluacion`) corre sin errores de extremo a extremo. Pendiente: validar con grabaciones reales, que introducirán ruido y armónicos que los sintéticos no tienen |
+| Decisión siguiente | Coordinar con Rodrigo la grabación de las 12 notas reales en `audio/originales/` para repetir esta evaluación sobre señales reales (hito del 18 sep) |
+| Responsable | Monica |
+| Evidencia | `src/evaluacion.py`, `datos/resultados.csv`, salida de consola |
