@@ -104,3 +104,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Implementar `src/espectro.py` (ventana de Hann + FFT) |
 | Responsable | Monica |
 | Evidencia | `src/preprocesamiento.py`, salida de consola |
+
+## Entrada 07 — 16 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/espectro.py: ventana de Hann, FFT y eje de frecuencias" |
+| Objetivo | Implementar la etapa de espectro (ecuaciones 11, 12, 14 del plan) |
+| Parámetros | N=32768, ventana Hann, fs=48000, probado sobre `Do4.wav` preprocesado |
+| Qué se probó | Ejecución de `src/espectro.py`; búsqueda del bin de mayor magnitud (sin interpolar) |
+| Resultado | Δf=1.465 Hz; pico crudo en bin 179 → 262.207 Hz (real: 261.626 Hz, error ≈0.58 Hz / 3.8 cents, esperado sin interpolación) |
+| Fallo o aprendizaje | `UnicodeEncodeError` al imprimir "Δ" en la consola de Windows (cp1252); se resolvió evitando caracteres no-ASCII en los `print()` |
+| Decisión siguiente | Implementar `src/deteccion.py`: buscar el pico en 80–1000 Hz e interpolar parabólicamente |
+| Responsable | Monica |
+| Evidencia | `src/espectro.py`, salida de consola |
