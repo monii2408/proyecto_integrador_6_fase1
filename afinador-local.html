@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Afinador Do4–Si4 (local)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f4ecd8;
+    --surface:#fffdf7;
+    --surface-2:#fbf3e2;
+    --ink:#2a2018;
+    --ink-soft:#7a6a54;
+    --accent:#a8722c;
+    --accent-strong:#8a5a1e;
+    --line:#ddd0b3;
+    --key-white:#fffaf0;
+    --key-white-active:#eed8a0;
+    --key-black:#241c14;
+    --key-black-active:#4a3a1c;
+    --key-black-ink:#e9dfc8;
+    --shadow:0 1px 0 rgba(42,32,24,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15110b;
+      --surface:#1f1810;
+      --surface-2:#241c13;
+      --ink:#f1e6d2;
+      --ink-soft:#b6a688;
+      --accent:#dcae57;
+      --accent-strong:#f0c26b;
+      --line:#3c3021;
+      --key-white:#e9dfc8;
+      --key-white-active:#caa24c;
+      --key-black:#0c0906;
+      --key-black-active:#5a451f;
+      --key-black-ink:#f1e6d2;
+      --shadow:0 1px 0 rgba(0,0,0,.3);
+    }
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+  }
+  .page{
+    max-width:640px;
+    margin:0 auto;
+    padding:28px 20px 40px;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+  header{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:clamp(24px,6vw,32px);
+    margin:0;
+    text-wrap:balance;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:14px;
+    margin:2px 0 0;
+    max-width:52ch;
+  }
+  .local-tag{
+    display:inline-block;
+    margin-top:4px;
+    font-size:11px;
+    font-weight:600;
+    color:var(--accent-strong);
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:3px 10px;
+    width:fit-content;
+  }
+
+  /* --- Teclado --- */
+  .keyboard-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:var(--shadow);
+  }
+  .keyboard{
+    position:relative;
+    display:flex;
+    height:clamp(130px,32vw,190px);
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .key{
+    -webkit-tap-highlight-color:transparent;
+    border:none;
+    cursor:pointer;
+    font-family:'Inter',system-ui,sans-serif;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    padding-bottom:10px;
+  }
+  .key:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:-2px;
+    z-index:5;
+  }
+  .key.white{
+    position:relative;
+    flex:1;
+    background:var(--key-white);
+    border-right:1px solid var(--line);
+    color:var(--ink-soft);
+    font-size:12px;
+    font-weight:600;
+    transition:background .12s ease;
+  }
+  .key.white:last-child{border-right:none;}
+  .key.white.is-active{
+    background:var(--key-white-active);
+    color:var(--ink);
+  }
+  .key.black{
+    position:absolute;
+    top:0;
+    width:8.5714%;
+    height:60%;
+    background:var(--key-black);
+    color:var(--key-black-ink);
+    border-radius:0 0 4px 4px;
+    z-index:2;
+    font-size:10px;
+    transition:background .12s ease;
+  }
+  .key.black.is-active{
+    background:var(--key-black-active);
+  }
+  .key.is-heard{
+    box-shadow:inset 0 0 0 3px var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .key{transition:none;}
+  }
+
+  /* --- Lectura --- */
+  .readout-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:22px 24px;
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+  }
+  .readout-main{display:flex; flex-direction:column; gap:6px; min-width:0;}
+  #noteName{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(30px,8vw,40px);
+    margin:0;
+  }
+  .freq-row{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-variant-numeric:tabular-nums;
+  }
+  #freqValue{
+    font-size:clamp(26px,7vw,34px);
+    font-weight:700;
+    color:var(--accent-strong);
+  }
+  .freq-unit{
+    font-size:15px;
+    color:var(--ink-soft);
+  }
+  #formula{
+    margin:2px 0 0;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  #keyIndex{
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .controls{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+  }
+  #playBtn{
+    font-family:'Inter',system-ui,sans-serif;
+    font-weight:600;
+    font-size:14px;
+    background:var(--accent);
+    color:var(--surface);
+    border:none;
+    border-radius:999px;
+    padding:11px 20px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  #playBtn:hover{background:var(--accent-strong);}
+  #playBtn:disabled{opacity:.7; cursor:default;}
+  #playBtn:focus-visible{outline:2px solid var(--accent-strong); outline-offset:2px;}
+  .btn-ghost{
+    font-family:'Inter',system-ui,sans-serif;
+    font-weight:600;
+    font-size:13px;
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:9px 18px;
+    cursor:pointer;
+    white-space:nowrap;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .btn-ghost:hover{border-color:var(--accent);}
+  .btn-ghost:focus-visible{outline:2px solid var(--accent-strong); outline-offset:2px;}
+  .btn-ghost.is-on{
+    background:var(--accent);
+    color:var(--surface);
+    border-color:var(--accent);
+  }
+  .btn-ghost.is-on::before{
+    content:'';
+    width:7px; height:7px;
+    border-radius:50%;
+    background:currentColor;
+  }
+  #micStatus{
+    font-size:11.5px;
+    color:var(--accent-strong);
+    margin:0;
+    min-height:14px;
+  }
+
+  /* --- Espectro --- */
+  .spectrum-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 20px 16px;
+    box-shadow:var(--shadow);
+  }
+  .spectrum-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .spectrum-title{
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  #peakLabel{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--accent-strong);
+    font-variant-numeric:tabular-nums;
+  }
+  .canvas-wrap{
+    position:relative;
+    width:100%;
+    height:150px;
+    border-radius:8px;
+    background:var(--surface-2);
+    overflow:hidden;
+  }
+  #spectrumCanvas{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+  .idle-msg{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink-soft);
+    font-size:12.5px;
+    text-align:center;
+    padding:0 20px;
+    pointer-events:none;
+  }
+  .band-tag{
+    position:absolute;
+    top:6px;
+    font-size:10px;
+    color:var(--ink-soft);
+    font-family:'JetBrains Mono',monospace;
+    pointer-events:none;
+  }
+  .axis-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+  }
+  .spectrum-note{
+    margin:10px 0 0;
+    font-size:11.5px;
+    line-height:1.5;
+    color:var(--ink-soft);
+  }
+  .spectrum-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+  @media (min-width:680px){
+    .spectrum-grid{grid-template-columns:1fr 1fr;}
+  }
+  .spectrum-grid > .spectrum-card{
+    min-width:0;
+  }
+  .spectrum-head{
+    min-width:0;
+  }
+  .spectrum-title{
+    min-width:0;
+    overflow-wrap:break-word;
+  }
+  .axis-row span{
+    white-space:nowrap;
+  }
+  .mini-tag{
+    display:inline-block;
+    margin-left:6px;
+    font-size:9.5px;
+    font-weight:600;
+    letter-spacing:.02em;
+    text-transform:none;
+    color:var(--accent-strong);
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:2px 8px;
+    vertical-align:1px;
+  }
+
+  footer{
+    font-size:11.5px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    text-align:center;
+    padding-top:4px;
+  }
+  footer code{
+    font-family:'JetBrains Mono',monospace;
+    background:var(--surface-2);
+    padding:1px 5px;
+    border-radius:4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <span class="eyebrow">Temperamento igual · La4 = 440 Hz</span>
+    <h1>Afinador Do4–Si4</h1>
+    <p class="sub">Elegí una tecla de la octava y mirá su frecuencia fundamental. Podés reproducir el tono o activar el micrófono para ver qué nota estás tocando, con la misma resolución que usa el pipeline del proyecto.</p>
+    <span class="local-tag">Versión local — el micrófono solo funciona abriendo este archivo directo en el navegador</span>
+  </header>
+
+  <div class="keyboard-card">
+    <div class="keyboard" id="keyboard" role="group" aria-label="Selector de nota, Do4 a Si4"></div>
+  </div>
+
+  <div class="readout-card">
+    <div class="readout-main">
+      <span class="eyebrow">Nota seleccionada</span>
+      <h2 id="noteName">La4</h2>
+      <div class="freq-row">
+        <span id="freqValue">440.000</span>
+        <span class="freq-unit">Hz</span>
+      </div>
+      <p id="formula">f₄₉ = 440 · 2^((49−49)/12)</p>
+      <span id="keyIndex">Tecla 49 del teclado estándar (La4 = tecla 49)</span>
+    </div>
+    <div class="controls">
+      <button id="playBtn" type="button">▶ Reproducir tono</button>
+      <button id="micBtn" type="button" class="btn-ghost">🎤 Escuchar micrófono</button>
+      <p id="micStatus"></p>
+    </div>
+  </div>
+
+  <div class="spectrum-grid">
+    <div class="spectrum-card">
+      <div class="spectrum-head">
+        <span class="spectrum-title" id="spectrumTitle">Espectro en vivo</span>
+        <span id="peakLabel"></span>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="spectrumCanvas"></canvas>
+        <span class="band-tag" id="bandTag" style="left:8%;">80 Hz</span>
+        <div class="idle-msg" id="idleMsg">Presioná ▶ para escuchar la nota, o activá el micrófono, para ver dónde cae el pico espectral</div>
+      </div>
+      <div class="axis-row">
+        <span>0</span><span>200</span><span>400</span><span>600</span><span>800</span><span>1000 Hz</span>
+      </div>
+      <p class="spectrum-note" id="resNote">El navegador usa un ventaneo interno (no es la ventana de Hann del pipeline), un umbral simple de nivel para el micrófono y no aplica interpolación parabólica: el "pico" o la nota "detectada" mostrados aquí son una lectura visual, no el resultado oficial de <code>evaluacion.py</code>.</p>
+    </div>
+
+    <div class="spectrum-card">
+      <div class="spectrum-head">
+        <span class="spectrum-title">Espectro de referencia<span class="mini-tag">ideal · sin ruido</span></span>
+        <span id="refPeakLabel"></span>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="refCanvas"></canvas>
+      </div>
+      <div class="axis-row">
+        <span>0</span><span>200</span><span>400</span><span>600</span><span>800</span><span>1000 Hz</span>
+      </div>
+      <p class="spectrum-note">Serie de armónicos de la nota seleccionada: f₀ y sus primeros armónicos, con la relación de amplitudes [1.0, 0.6, 0.4, 0.25, 0.15] usada en <code>prueba_armonicos.py</code>. Sin ruido ni ventaneo — es una referencia visual, no una FFT.</p>
+    </div>
+  </div>
+
+  <footer>
+    Referencia: temperamento igual, La4 = 440&nbsp;Hz · <code>f_n = 440 · 2^((n−49)/12)</code>
+    (fuente: <code>src/notas.py</code>, Proyecto Integrador 6 — Fase 1, EE2004)
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var NOTES = [
+    {n:40, name:'Do4',  base:'Do',  white:true},
+    {n:41, name:'Do#4', base:'Do♯', white:false},
+    {n:42, name:'Re4',  base:'Re',  white:true},
+    {n:43, name:'Re#4', base:'Re♯', white:false},
+    {n:44, name:'Mi4',  base:'Mi',  white:true},
+    {n:45, name:'Fa4',  base:'Fa',  white:true},
+    {n:46, name:'Fa#4', base:'Fa♯', white:false},
+    {n:47, name:'Sol4', base:'Sol', white:true},
+    {n:48, name:'Sol#4',base:'Sol♯',white:false},
+    {n:49, name:'La4',  base:'La',  white:true},
+    {n:50, name:'La#4', base:'La♯', white:false},
+    {n:51, name:'Si4',  base:'Si',  white:true}
+  ];
+  var BLACK_LEFT = {
+    'Do#4':10.0,
+    'Re#4':24.2857,
+    'Fa#4':52.8571,
+    'Sol#4':67.1429,
+    'La#4':81.4286
+  };
+  var LA4_HZ = 440.0, TECLA_LA4 = 49;
+
+  function freqOf(n){ return LA4_HZ * Math.pow(2, (n - TECLA_LA4) / 12); }
+
+  var keyboardEl = document.getElementById('keyboard');
+  var keyButtons = {};
+
+  NOTES.filter(function(nt){return nt.white;}).forEach(function(nt){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key white';
+    b.setAttribute('aria-pressed','false');
+    b.setAttribute('aria-label', nt.name);
+    b.innerHTML = '<span class="key-label">' + nt.base + '</span>';
+    b.addEventListener('click', function(){ selectNote(nt.n); playTone(); });
+    keyboardEl.appendChild(b);
+    keyButtons[nt.n] = b;
+  });
+  NOTES.filter(function(nt){return !nt.white;}).forEach(function(nt){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key black';
+    b.style.left = BLACK_LEFT[nt.name] + '%';
+    b.setAttribute('aria-pressed','false');
+    b.setAttribute('aria-label', nt.base + ' 4 sostenido');
+    b.addEventListener('click', function(){ selectNote(nt.n); playTone(); });
+    keyboardEl.appendChild(b);
+    keyButtons[nt.n] = b;
+  });
+
+  var noteNameEl = document.getElementById('noteName');
+  var freqValueEl = document.getElementById('freqValue');
+  var formulaEl = document.getElementById('formula');
+  var keyIndexEl = document.getElementById('keyIndex');
+  var playBtn = document.getElementById('playBtn');
+  var micBtn = document.getElementById('micBtn');
+  var micStatus = document.getElementById('micStatus');
+  var peakLabelEl = document.getElementById('peakLabel');
+  var spectrumTitleEl = document.getElementById('spectrumTitle');
+  var idleMsg = document.getElementById('idleMsg');
+
+  var canvas = document.getElementById('spectrumCanvas');
+  var cctx = canvas.getContext('2d');
+  var refCanvas = document.getElementById('refCanvas');
+  var rctx = refCanvas.getContext('2d');
+  var refPeakLabelEl = document.getElementById('refPeakLabel');
+
+  // Misma relación de amplitudes que src/prueba_armonicos.py (fundamental + 4 armónicos)
+  var HARMONIC_AMPS = [1.0, 0.6, 0.4, 0.25, 0.15];
+
+  var currentN = 49;
+  try {
+    var saved = localStorage.getItem('afinador.lastNote');
+    if (saved) { var sn = parseInt(saved, 10); if (sn >= 40 && sn <= 51) currentN = sn; }
+  } catch (e) {}
+
+  var accentColor, softColor, inkSoftColor;
+  function readColors(){
+    var cs = getComputedStyle(document.documentElement);
+    accentColor = cs.getPropertyValue('--accent-strong').trim() || '#a8722c';
+    softColor = cs.getPropertyValue('--line').trim() || '#ddd0b3';
+    inkSoftColor = cs.getPropertyValue('--ink-soft').trim() || '#7a6a54';
+  }
+
+  // mode: 'idle' | 'tone' | 'mic'
+  var mode = 'idle';
+  var audioCtx = null, rafId = null;
+  var analyser = null, activeOsc = null, stopTimer = null;
+  var micStream = null, micSource = null, micAnalyser = null, micMuteGain = null;
+  var MIC_THRESHOLD = 28; // sobre 255, nivel mínimo para considerar que hay señal
+
+  function ensureAudio(){
+    if (!audioCtx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function subToUnicode(str){
+    var subs = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+    return String(str).split('').map(function(c){ return subs[c] || c; }).join('');
+  }
+
+  function nearestNote(freq){
+    var best = null;
+    NOTES.forEach(function(nt){
+      var c = 1200 * Math.log2(freq / freqOf(nt.n));
+      if (best === null || Math.abs(c) < Math.abs(best.cents)) best = { note: nt, cents: c };
+    });
+    return best;
+  }
+
+  function setHeard(n){
+    Object.keys(keyButtons).forEach(function(k){
+      keyButtons[k].classList.toggle('is-heard', parseInt(k, 10) === n);
+    });
+  }
+  function clearHeard(){
+    Object.keys(keyButtons).forEach(function(k){ keyButtons[k].classList.remove('is-heard'); });
+  }
+
+  function selectNote(n){
+    currentN = n;
+    try { localStorage.setItem('afinador.lastNote', String(n)); } catch (e) {}
+    Object.keys(keyButtons).forEach(function(k){
+      var active = (parseInt(k,10) === n);
+      keyButtons[k].classList.toggle('is-active', active);
+      keyButtons[k].setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    var nt = NOTES.filter(function(x){ return x.n === n; })[0];
+    var freq = freqOf(n);
+    noteNameEl.textContent = nt.name;
+    freqValueEl.textContent = freq.toFixed(3);
+    formulaEl.textContent = 'f' + subToUnicode(n) + ' = 440 · 2^((' + n + '−49)/12)';
+    keyIndexEl.textContent = 'Tecla ' + n + ' del teclado estándar (La4 = tecla 49)';
+    stopTone();
+    if (mode === 'idle') drawIdle(freq);
+    drawReference(freq);
+  }
+
+  function playTone(){
+    stopMic();
+    ensureAudio();
+    readColors();
+    var freq = freqOf(currentN);
+    var ctx = audioCtx;
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    var gain = ctx.createGain();
+    var an = ctx.createAnalyser();
+    an.fftSize = 32768;
+    an.smoothingTimeConstant = 0.55;
+
+    var now = ctx.currentTime;
+    var dur = 1.5;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+    gain.gain.setValueAtTime(0.22, now + dur - 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+    osc.connect(gain);
+    gain.connect(an);
+    an.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+
+    analyser = an;
+    activeOsc = osc;
+    mode = 'tone';
+    playBtn.disabled = true;
+    playBtn.textContent = '♪ Sonando…';
+    idleMsg.style.display = 'none';
+    spectrumTitleEl.textContent = 'Espectro en vivo — tono generado';
+
+    if (stopTimer) clearTimeout(stopTimer);
+    stopTimer = setTimeout(function(){
+      playBtn.disabled = false;
+      playBtn.textContent = '▶ Reproducir tono';
+      activeOsc = null;
+      mode = 'idle';
+      spectrumTitleEl.textContent = 'Espectro en vivo';
+      drawIdle(freqOf(currentN));
+    }, dur * 1000 + 120);
+  }
+
+  function stopTone(){
+    if (activeOsc){ try { activeOsc.stop(); } catch (e) {} activeOsc = null; }
+    if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+    playBtn.disabled = false;
+    playBtn.textContent = '▶ Reproducir tono';
+    if (mode === 'tone'){
+      mode = 'idle';
+      spectrumTitleEl.textContent = 'Espectro en vivo';
+    }
+  }
+
+  function startMic(){
+    stopTone();
+    ensureAudio();
+    micStatus.textContent = '';
+    navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    }).then(function(stream){
+      micStream = stream;
+      micSource = audioCtx.createMediaStreamSource(stream);
+      var an = audioCtx.createAnalyser();
+      an.fftSize = 32768;
+      an.smoothingTimeConstant = 0.5;
+      var mute = audioCtx.createGain();
+      mute.gain.value = 0; // analiza sin sacar el audio por los parlantes (evita realimentación)
+      micSource.connect(an);
+      an.connect(mute);
+      mute.connect(audioCtx.destination);
+      micAnalyser = an;
+      micMuteGain = mute;
+      mode = 'mic';
+      micBtn.textContent = '⏹ Detener micrófono';
+      micBtn.classList.add('is-on');
+      idleMsg.style.display = 'none';
+      spectrumTitleEl.textContent = 'Espectro en vivo — micrófono';
+    }).catch(function(err){
+      micStatus.textContent = 'No se pudo activar el micrófono: ' + (err && err.message ? err.message : err);
+    });
+  }
+
+  function stopMic(){
+    if (micStream){ micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
+    if (micSource){ try { micSource.disconnect(); } catch (e) {} micSource = null; }
+    if (micAnalyser){ try { micAnalyser.disconnect(); } catch (e) {} micAnalyser = null; }
+    if (micMuteGain){ try { micMuteGain.disconnect(); } catch (e) {} micMuteGain = null; }
+    clearHeard();
+    micBtn.textContent = '🎤 Escuchar micrófono';
+    micBtn.classList.remove('is-on');
+    if (mode === 'mic'){
+      mode = 'idle';
+      spectrumTitleEl.textContent = 'Espectro en vivo';
+      drawIdle(freqOf(currentN));
+    }
+  }
+
+  function resizeCanvasEl(cv, ctx){
+    var wrap = cv.parentElement;
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.max(1, Math.round(w * dpr));
+    cv.height = Math.max(1, Math.round(h * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: w, h: h };
+  }
+  function resizeCanvas(){ return resizeCanvasEl(canvas, cctx); }
+  function resizeRefCanvas(){ return resizeCanvasEl(refCanvas, rctx); }
+
+  function drawIdle(freq){
+    readColors();
+    var dim = resizeCanvas();
+    cctx.clearRect(0, 0, dim.w, dim.h);
+    cctx.strokeStyle = softColor;
+    cctx.setLineDash([3,4]);
+    cctx.lineWidth = 1;
+    var xTheo = (freq / 1000) * dim.w;
+    cctx.beginPath();
+    cctx.moveTo(xTheo, 0);
+    cctx.lineTo(xTheo, dim.h);
+    cctx.stroke();
+    cctx.setLineDash([]);
+    idleMsg.style.display = 'flex';
+    peakLabelEl.textContent = '';
+  }
+
+  function drawMarker(dim, freq, dashed){
+    var x = (freq / 1000) * dim.w;
+    cctx.strokeStyle = accentColor;
+    if (dashed) cctx.setLineDash([2,3]); else cctx.setLineDash([]);
+    cctx.lineWidth = 1;
+    cctx.beginPath();
+    cctx.moveTo(x, 0);
+    cctx.lineTo(x, dim.h);
+    cctx.stroke();
+    cctx.setLineDash([]);
+  }
+
+  function drawSpectrumBase(an){
+    var dim = resizeCanvas();
+    var bufferLength = an.frequencyBinCount;
+    var data = new Uint8Array(bufferLength);
+    an.getByteFrequencyData(data);
+    var sampleRate = audioCtx.sampleRate;
+    var binHz = sampleRate / an.fftSize;
+    var maxBin = Math.min(bufferLength - 1, Math.ceil(1000 / binHz));
+    var bandLo = Math.max(0, Math.floor(80 / binHz));
+    var bandHi = Math.min(maxBin, Math.floor(1000 / binHz));
+
+    cctx.clearRect(0, 0, dim.w, dim.h);
+    cctx.fillStyle = softColor;
+    cctx.globalAlpha = 0.18;
+    var xBandLo = (bandLo / maxBin) * dim.w;
+    cctx.fillRect(xBandLo, 0, dim.w - xBandLo, dim.h);
+    cctx.globalAlpha = 1;
+
+    var points = [];
+    var peakVal = -1, peakBin = bandLo;
+    for (var i = 0; i <= maxBin; i++){
+      var x = (i / maxBin) * dim.w;
+      var v = data[i] / 255;
+      var y = dim.h - v * dim.h;
+      points.push({ x: x, y: y });
+      if (i >= bandLo && i <= bandHi && data[i] > peakVal){ peakVal = data[i]; peakBin = i; }
+    }
+
+    // Relleno con degradado bajo la curva, para dar profundidad
+    cctx.beginPath();
+    cctx.moveTo(points[0].x, dim.h);
+    for (var p = 0; p < points.length; p++) cctx.lineTo(points[p].x, points[p].y);
+    cctx.lineTo(points[points.length - 1].x, dim.h);
+    cctx.closePath();
+    var fillGrad = cctx.createLinearGradient(0, 0, 0, dim.h);
+    fillGrad.addColorStop(0, accentColor + '55');
+    fillGrad.addColorStop(1, accentColor + '05');
+    cctx.fillStyle = fillGrad;
+    cctx.fill();
+
+    // Línea de la curva, con leve brillo
+    cctx.beginPath();
+    for (var q = 0; q < points.length; q++){
+      if (q === 0) cctx.moveTo(points[q].x, points[q].y); else cctx.lineTo(points[q].x, points[q].y);
+    }
+    cctx.lineJoin = 'round';
+    cctx.lineCap = 'round';
+    cctx.shadowColor = accentColor;
+    cctx.shadowBlur = 5;
+    cctx.strokeStyle = accentColor;
+    cctx.lineWidth = 1.6;
+    cctx.stroke();
+    cctx.shadowBlur = 0;
+
+    return { dim: dim, binHz: binHz, peakBin: peakBin, peakVal: peakVal };
+  }
+
+  function drawReference(freq){
+    readColors();
+    var dim = resizeRefCanvas();
+    rctx.clearRect(0, 0, dim.w, dim.h);
+
+    rctx.fillStyle = softColor;
+    rctx.globalAlpha = 0.18;
+    var xBandLo = (80 / 1000) * dim.w;
+    rctx.fillRect(xBandLo, 0, dim.w - xBandLo, dim.h);
+    rctx.globalAlpha = 1;
+
+    var harmonics = [];
+    for (var h = 1; h <= HARMONIC_AMPS.length; h++){
+      var fh = freq * h;
+      if (fh > 1000) break;
+      harmonics.push({ h: h, freq: fh, amp: HARMONIC_AMPS[h - 1] });
+    }
+
+    var topMargin = 18, bottomMargin = 4;
+    var maxBarH = dim.h - topMargin - bottomMargin;
+
+    harmonics.forEach(function(pt, idx){
+      var x = (pt.freq / 1000) * dim.w;
+      var barH = pt.amp * maxBarH;
+      var y = dim.h - bottomMargin - barH;
+      var isFund = idx === 0;
+
+      var stemGrad = rctx.createLinearGradient(0, y, 0, dim.h - bottomMargin);
+      stemGrad.addColorStop(0, accentColor);
+      stemGrad.addColorStop(1, accentColor + '20');
+      rctx.strokeStyle = stemGrad;
+      rctx.lineCap = 'round';
+      rctx.lineWidth = isFund ? 3 : 2;
+      rctx.beginPath();
+      rctx.moveTo(x, dim.h - bottomMargin);
+      rctx.lineTo(x, y);
+      rctx.stroke();
+
+      rctx.beginPath();
+      rctx.fillStyle = accentColor;
+      rctx.globalAlpha = isFund ? 1 : 0.7;
+      rctx.shadowColor = accentColor;
+      rctx.shadowBlur = isFund ? 8 : 3;
+      rctx.arc(x, y, isFund ? 5 : 3.5, 0, Math.PI * 2);
+      rctx.fill();
+      rctx.shadowBlur = 0;
+      rctx.globalAlpha = 1;
+
+      rctx.fillStyle = inkSoftColor;
+      rctx.font = (isFund ? '700 10.5px' : '600 9.5px') + ' "JetBrains Mono", monospace';
+      rctx.textAlign = 'center';
+      var label = isFund ? 'f₀' : (pt.h + 'f₀');
+      rctx.fillText(label, Math.min(Math.max(x, 14), dim.w - 14), Math.max(11, y - 9));
+    });
+
+    refPeakLabelEl.textContent = harmonics.length
+      ? 'f₀ = ' + freq.toFixed(1) + ' Hz · ' + harmonics.length + ' armónico' + (harmonics.length === 1 ? '' : 's') + ' en rango'
+      : '';
+  }
+
+  function renderTone(){
+    if (!analyser || !audioCtx) return;
+    readColors();
+    var theoFreq = freqOf(currentN);
+    var r = drawSpectrumBase(analyser);
+    drawMarker(r.dim, theoFreq, true);
+    var peakFreq = r.peakBin * r.binHz;
+    var cents = peakFreq > 0 ? 1200 * Math.log2(peakFreq / theoFreq) : 0;
+    peakLabelEl.textContent = 'pico ≈ ' + peakFreq.toFixed(1) + ' Hz (' + (cents>=0?'+':'') + cents.toFixed(1) + ' cents) · Δf≈' + r.binHz.toFixed(3) + ' Hz';
+  }
+
+  function renderMic(){
+    if (!micAnalyser || !audioCtx) return;
+    readColors();
+    var refFreq = freqOf(currentN);
+    var r = drawSpectrumBase(micAnalyser);
+    drawMarker(r.dim, refFreq, true); // referencia: nota elegida en el teclado
+    if (r.peakVal < MIC_THRESHOLD){
+      peakLabelEl.textContent = 'Escuchando… (sin señal suficiente en 80–1000 Hz)';
+      clearHeard();
+      return;
+    }
+    var peakFreq = r.peakBin * r.binHz;
+    drawMarker(r.dim, peakFreq, false); // pico detectado
+    var nearest = nearestNote(peakFreq);
+    peakLabelEl.textContent = 'Detectado: ' + nearest.note.name + ' ≈ ' + peakFreq.toFixed(1) + ' Hz (' + (nearest.cents>=0?'+':'') + nearest.cents.toFixed(1) + ' cents)';
+    setHeard(nearest.note.n);
+  }
+
+  function loop(){
+    rafId = requestAnimationFrame(loop);
+    if (mode === 'tone') renderTone();
+    else if (mode === 'mic') renderMic();
+  }
+
+  window.addEventListener('resize', function(){
+    if (mode === 'idle') drawIdle(freqOf(currentN));
+    drawReference(freqOf(currentN));
+  });
+  window.addEventListener('pagehide', stopMic);
+
+  playBtn.addEventListener('click', playTone);
+  micBtn.addEventListener('click', function(){
+    if (mode === 'mic') stopMic(); else startMic();
+  });
+
+  selectNote(currentN);
+  loop();
+})();
+</script>
+</body>
+</html>
