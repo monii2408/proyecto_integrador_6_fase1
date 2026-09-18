@@ -160,3 +160,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Pedirle a Rodrigo 2–3 grabaciones reales para validar contra el hito del 18 sep; en paralelo, considerar prueba de robustez con ruido |
 | Responsable | Monica |
 | Evidencia | `src/prueba_armonicos.py`, `audio/sinteticos/armonicos/*.wav`, salida de consola |
+
+## Entrada 11 — 18 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/graficar_espectro.py: figura del espectro con pico crudo e interpolado" |
+| Objetivo | Producir el gráfico espectral que faltaba del entregable de la Sesión 2 y hacer visible el efecto de la interpolación parabólica |
+| Parámetros | fs = 48 000 Hz, N = 32 768, ventana de Hann, `audio/sinteticos/armonicos/Do4.wav`, zoom de ±10 Hz |
+| Qué se probó | Ejecución de `src/graficar_espectro.py`: panel A con el espectro hasta 2 kHz y el rango de búsqueda; panel B con los bins alrededor del pico, el bin crudo, el f0 interpolado y la frecuencia de tabla |
+| Resultado | Bin crudo 262,207 Hz (+3,84 cents); f0 interpolado 261,689 Hz (+0,42 cents); tabla 261,626 Hz. Figura en `figuras/espectro_Do4.png` |
+| Fallo o aprendizaje | En la primera versión la leyenda del panel B tapaba el flanco del pico; se subió el límite superior del eje. La figura solo dibuja lo que ya devuelven `espectro`, `buscar_pico` e `interpolar_pico` |
+| Decisión siguiente | Repetir la figura con las grabaciones reales de Rodrigo y comparar contra la sintética |
+| Responsable | Monica |
+| Evidencia | `src/graficar_espectro.py`, `figuras/espectro_Do4.png` |
