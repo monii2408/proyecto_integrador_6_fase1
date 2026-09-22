@@ -1,0 +1,51 @@
+Los archivos puede que no te lleguen en orden, básicamente porque los nombres que ves son los nombres de las notas en una notación "forma de escribir" americana a diferencia de la de nosotros. Latina, la de toda la vida, do, re, mi, fa.
+
+A continuación te pongo datos que te pueden facilitar la vida cuando hagas el piano. 
+
+PIANO — REFERENCIA RÁPIDA PARA PROGRAMACIÓN
+
+NOTACIÓN INGLESA → NOTACIÓN LATINA → SEMITONO → MIDI
+
+C4 = DO4 = 0 semitonos = MIDI 60
+Db4 = RE♭4 = 1 semitono = MIDI 61
+D4 = RE4 = 2 semitonos = MIDI 62
+Eb4 = MI♭4 = 3 semitonos = MIDI 63
+E4 = MI4 = 4 semitonos = MIDI 64
+F4 = FA4 = 5 semitonos = MIDI 65
+Gb4 = SOL♭4 = 6 semitonos = MIDI 66
+G4 = SOL4 = 7 semitonos = MIDI 67
+Ab4 = LA♭4 = 8 semitonos = MIDI 68
+A4 = LA4 = 9 semitonos = MIDI 69
+Bb4 = SI♭4 = 10 semitonos = MIDI 70
+B4 = SI4 = 11 semitonos = MIDI 71
+
+IMPORTANTE:
+
+Desde C4/Do4 → B4/Si4 contiene 12 notas: 7 naturales + 5 sostenidos/bemoles. 
+
+Cada nota consecutiva está separada por 1 semitono.
+
+E→F y B→C también son 1 semitono aunque no tengan tecla negra entre ellas. (por lo que no hacen falta letras negras JUSTO en esas notas).
+
+Db = C#; Eb = D#; Gb = F#; Ab = G#; Bb = A#. ( Basica mente son lo semitono ) 
+
+DINÁMICA / VOLUMEN DEL SAMPLE:
+pp = pianissimo = muy suave
+mf = mezzo-forte = moderadamente fuerte
+ff = fortissimo = muy fuerte
+
+Para programación, pp/mf/ff pueden representar DIFERENTES CAPAS DE VELOCIDAD DEL MISMO SAMPLE:
+pp → tocar muy suave
+mf → intensidad media
+ff → tocar fuerte
+
+VELOCITY MIDI:
+0–127 = intensidad de la pulsación.
+Ejemplo aproximado:
+1–30 = pp
+31–75 = mf
+76–127 = ff
+(Estos rangos son configurables; no son una regla universal.)
+lo demás te lo dejo a vos; suerte, cualquier cosa pregúntame.
+
+Mini nota. No todos los audios miden ni tienen que durar lo mismo, y también parece que a veces el audio ya terminó, pero realmente sigue sonando muy suavemente
