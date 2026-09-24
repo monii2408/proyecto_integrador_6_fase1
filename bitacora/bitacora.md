@@ -276,3 +276,18 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Actualizar el README (versión de Python soportada, comandos de ejecución); decidir si se silencia el aviso también en `preprocesamiento.py`; completar `informe.tex` |
 | Responsable | Monica |
 | Evidencia | `src/analizar_nota.py`, salida de consola en el equipo de Monica |
+
+
+## Entrada 19 — 24 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega --figura a analizar_nota.py: espectro de la nota analizada" |
+| Objetivo | Que la demo de `analizar_nota.py` produzca también una figura del pipeline oficial (espectro + zoom con f0 interpolado), como material visual para el video de demostración, ya que se descartó usar `afinador-local.html` (no aplica Hann, interpolación ni bajada a la fundamental; se declara "lectura visual, no el resultado oficial") |
+| Parámetros | Flag `--figura`; guarda en `figuras/analisis_<nombre_wav>.png`; panel A hasta 2000 Hz con la banda 80–1000 Hz, panel B con zoom de ±10 Hz sobre la fundamental corregida (bin crudo, f0 interpolado y frecuencia de tabla) |
+| Qué se probó | Regresión sin `--figura` sobre Do4 mf (idéntico a antes: +2,89 cents); con `--figura` sobre Re4 mf, caso donde el pico más alto del espectro es el 2.º armónico (~587 Hz) y no la fundamental (~294 Hz) |
+| Resultado | La figura de Re4 muestra en el panel A el armónico dominante y en el zoom del panel B la fundamental correcta (293,728 Hz, +0,37 cents), confirmando visualmente que `--figura` usa la fundamental ya corregida por `bajar_a_fundamental` y no el pico máximo bruto |
+| Fallo o aprendizaje | Ninguno; se reutilizó el mismo criterio de `graficar_espectro.py` pero generalizado a un WAV y una nota detectada cualesquiera, sin recalcular el pico dos veces (analizar_nota ahora expone frecuencias, magnitud y k en su resultado) |
+| Decisión siguiente | Guion del video con `analizar_nota.py --figura`; retomar la revisión del informe cuando el equipo la traiga con cambios |
+| Responsable | Monica |
+| Evidencia | `src/analizar_nota.py`, `figuras/analisis_Piano.mf.D4.png`, salida de consola |
