@@ -28,14 +28,38 @@ def normalizar(senal):
     return senal / pico if pico > 0 else senal
 
 
+def detectar_inicio(senal, fs, umbral=0.1, ms_ventana=10):
+    """
+    Índice de la muestra donde empieza la nota: la primera ventana corta cuya
+    energía (RMS) supera `umbral` veces la de la ventana más fuerte.
+    Los samples reales traen silencio o ruido antes de la tecla (en ff, hasta
+    ~1 s); si se analizara ese tramo, la FFT vería ruido y no la nota.
+    Entra: senal (np.ndarray), fs (int), umbral (float, fracción del RMS máximo),
+           ms_ventana (float, ancho de la ventana de energía).
+    Sale: índice de la muestra de inicio (int); 0 si la señal ya empieza sonando.
+    """
+    ancho = max(1, int(ms_ventana / 1000 * fs))
+    n_ventanas = len(senal) // ancho
+    if n_ventanas == 0:
+        return 0
+    bloques = senal[: n_ventanas * ancho].reshape(n_ventanas, ancho)
+    rms = np.sqrt(np.mean(bloques**2, axis=1))
+    if rms.max() == 0:
+        return 0
+    primera = int(np.argmax(rms > umbral * rms.max()))
+    return primera * ancho
+
+
 def recortar_ataque(senal, fs, ms_descarte=75):
     """
-    Descarta el ataque inicial (el golpe de tecla es un transitorio no
-    periódico que ensuciaría el espectro con energía fuera de la fundamental).
+    Descarta el silencio previo y el ataque inicial (el golpe de tecla es un
+    transitorio no periódico que ensuciaría el espectro con energía fuera de
+    la fundamental). El descarte de ms_descarte se cuenta desde el inicio
+    real de la nota, no desde el inicio del archivo.
     Entra: senal (np.ndarray), fs (int), ms_descarte (float, 50-100 ms según el plan).
     Sale: senal recortada (np.ndarray).
     """
-    n_descarte = int(ms_descarte / 1000 * fs)
+    n_descarte = detectar_inicio(senal, fs) + int(ms_descarte / 1000 * fs)
     return senal[n_descarte:]
 
 

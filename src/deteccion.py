@@ -6,6 +6,7 @@ from espectro import N
 
 F_MIN = 80
 F_MAX = 1000
+RAZON_SUBARMONICO = 0.25  # un pico a f/2, f/3 o f/4 con >= 25 % del máximo es la fundamental
 
 
 def buscar_pico(frecuencias, magnitud, f_min=F_MIN, f_max=F_MAX):
@@ -18,6 +19,28 @@ def buscar_pico(frecuencias, magnitud, f_min=F_MIN, f_max=F_MAX):
     """
     indices = np.where((frecuencias >= f_min) & (frecuencias <= f_max))[0]
     return indices[np.argmax(magnitud[indices])]
+
+
+def bajar_a_fundamental(frecuencias, magnitud, k, f_min=F_MIN, razon=RAZON_SUBARMONICO):
+    """
+    Corrige el error de octava: en el piano real el 2.º o 3.er armónico puede
+    ser más fuerte que la fundamental, y el pico máximo caería en él.
+    Mira si hay un pico razonable en la frecuencia del pico dividida por 2, 3 y 4;
+    si lo hay (>= `razon` de la magnitud del pico máximo), ese es la fundamental.
+    Entra: frecuencias, magnitud (np.ndarray), k (int) bin del pico máximo,
+           f_min (Hz), razon (float, fracción mínima de magnitud).
+    Sale: k (int), bin de la fundamental (el mismo k si no hay pico por debajo).
+    """
+    for divisor in (4, 3, 2):  # de menor a mayor frecuencia: gana la más baja que cumpla
+        centro = int(round(k / divisor))
+        if frecuencias[centro] < f_min:
+            continue
+        ancho = max(2, int(0.03 * centro))  # tolerancia ~3 % por inarmonicidad del piano
+        ventana = np.arange(centro - ancho, centro + ancho + 1)
+        candidato = ventana[np.argmax(magnitud[ventana])]
+        if magnitud[candidato] >= razon * magnitud[k]:
+            return candidato
+    return k
 
 
 def interpolar_pico(magnitud, k, fs, n=N):
@@ -36,11 +59,13 @@ def interpolar_pico(magnitud, k, fs, n=N):
 
 def detectar_f0(frecuencias, magnitud, fs, n=N, f_min=F_MIN, f_max=F_MAX):
     """
-    Pipeline: busca el pico crudo en el rango -> interpola -> f0 final.
+    Pipeline: pico crudo en el rango -> baja a la fundamental si el pico es un
+    armónico -> interpola -> f0 final.
     Entra: frecuencias, magnitud (np.ndarray), fs (int), n (int), f_min, f_max (Hz).
     Sale: f0 (float), frecuencia fundamental estimada en Hz.
     """
     k = buscar_pico(frecuencias, magnitud, f_min, f_max)
+    k = bajar_a_fundamental(frecuencias, magnitud, k, f_min)
     return interpolar_pico(magnitud, k, fs, n)
 
 
