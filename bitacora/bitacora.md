@@ -174,3 +174,90 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Repetir la figura con las grabaciones reales de Rodrigo y comparar contra la sintética |
 | Responsable | Monica |
 | Evidencia | `src/graficar_espectro.py`, `figuras/espectro_Do4.png` |
+
+
+## Entrada 12 — 23 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/evaluar_reales.py y detectar_inicio: evaluación sobre samples de piano" |
+| Objetivo | Evaluar el pipeline sobre audio real (los 36 samples de piano de Rodrigo: 12 notas × pp, mf, ff) y comprobar los criterios de éxito fuera de los sintéticos |
+| Parámetros | Samples a 44 100 Hz, estéreo, 18–70 s de duración; N = 32 768, Hann, rango 80–1000 Hz, descarte de ataque 75 ms. Notación inglesa traducida a latina (C4 → Do4, Db4 → Do#4, ...) |
+| Qué se probó | `src/evaluar_reales.py` con el pipeline sin cambios; luego diagnóstico gráfico del espectro de tres casos fallidos (Do4 pp, Re4 mf, Do#4 ff) |
+| Resultado | Sin cambios al pipeline: reconocimiento pp 11/12, mf 9/12, ff 6/12; error < 5 cents en 5, 6 y 3 de 12 notas. Los criterios de la Fase 1 NO se cumplían con audio real |
+| Fallo o aprendizaje | Dos causas independientes. (1) Los ff empiezan a sonar hacia ~1 s (pp a 0,1 s, mf a 0,3 s); el descarte fijo de 75 ms analizaba silencio y la FFT veía ruido de 80–150 Hz. (2) En Do4 pp y Re4 mf la 2.ª armónica es más fuerte que la fundamental (magnitudes 2026 vs 874 y 1423 vs 974), y "pico máximo en 80–1000 Hz" elegía el armónico. Los sintéticos no lo mostraban porque siempre tenían la fundamental dominante |
+| Decisión siguiente | Detectar el inicio real de la nota en `preprocesamiento.py` y bajar a la fundamental en `deteccion.py` |
+| Responsable | Monica |
+| Evidencia | `src/evaluar_reales.py`, `datos/resultados_reales.csv`, gráfico de diagnóstico de los tres espectros, salida de consola |
+
+## Entrada 13 — 23 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Corrige detección en audio real: inicio de nota y bajada a la fundamental" |
+| Objetivo | Corregir las dos causas de fallo halladas en la Entrada 12 sin reabrir las decisiones de diseño (fs, N, Hann, rango) |
+| Parámetros | `detectar_inicio`: ventanas de 10 ms, umbral = 10 % del RMS máximo, más 75 ms de ataque contados desde ese inicio. `bajar_a_fundamental`: revisa f/2, f/3 y f/4 con tolerancia ±3 % y razón mínima 0,25 de la magnitud del pico máximo |
+| Qué se probó | Cada corrección por separado y las dos juntas sobre los 36 samples; regresión sobre los 12 sintéticos y la prueba de armónicos |
+| Resultado | Solo con el detector de inicio: los fallos de ff bajan de 6 a 3 y todos los que quedan son de octava. Con ambas correcciones: reconocimiento 12/12 en pp, mf y ff; error < 5 cents en 10/12 (pp), 10/12 (mf) y 8/12 (ff). Sintéticos: 100 %, `resultados.csv` sin cambios; prueba de armónicos sin cambios |
+| Fallo o aprendizaje | Con el detector de inicio solo, dos notas pp que acertaban (Re#4, Mi4) pasaron a fallar: antes acertaban por casualidad porque se analizaba mal el tramo. Queda un sesgo sistemático de +2 a +8 cents (media ≈ +4) en casi todas las notas y dinámicas, que no aparece en los sintéticos. Hipótesis sin comprobar: los samples están afinados cerca de 441 Hz (+3,9 cents respecto a 440). Do#4 y Sol#4 se desvían más que el resto. Con la referencia oficial La4 = 440 Hz, el criterio de < 5 cents no se cumple en ff |
+| Decisión siguiente | Prueba de robustez con ruido; preguntar a Rodrigo el origen y afinación de los samples; reportar en el informe el error contra 440 Hz y, aparte, el error relativo a la afinación propia del sample |
+| Responsable | Monica |
+| Evidencia | `src/preprocesamiento.py` (`detectar_inicio`), `src/deteccion.py` (`bajar_a_fundamental`), `datos/resultados_reales.csv`, salida de consola |
+
+
+## Entrada 14 — 23 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/prueba_ruido.py: robustez frente a ruido blanco" |
+| Objetivo | Cerrar la prueba de robustez frente a ruido que las Entradas 10 y 11 dejaron pendiente y localizar el punto donde el pipeline falla |
+| Parámetros | 12 tonos sintéticos con armónicos (`audio/sinteticos/armonicos/`), ruido blanco gaussiano, SNR = 40, 30, 20, 10, 5, 0, −10, −20 y −30 dB, 20 repeticiones por nota y por nivel, semilla fija 2026 |
+| Qué se probó | `src/prueba_ruido.py`: suma ruido a cada señal y ejecuta el pipeline completo (normalizar, recortar ataque, Hann, FFT, pico, bajada a la fundamental, interpolación) |
+| Resultado | De 40 a −10 dB: reconocimiento 100 %, error medio 0,25 a 0,28 cents, error máximo 0,43 a 0,87 cents. A −20 dB: 68,3 % y error medio 644 cents. A −30 dB: 8,3 %. El sistema se rompe entre −10 y −20 dB. Salida en `datos/resultados_ruido.csv` |
+| Fallo o aprendizaje | La robustez se explica por la FFT de N = 32 768: la energía del tono se concentra en pocos bins y el ruido blanco se reparte entre 16 384. Sirve como argumento adicional para la elección de N. Límites: el ruido blanco no equivale al ruido de una habitación (más grave, dentro de la banda 80–1000 Hz) y las señales son sintéticas; no se probó ruido coloreado ni piano con ruido. El ruido tampoco explica el sesgo de ~+4 cents visto en los samples (Entrada 13) |
+| Decisión siguiente | Figura del espectro con una nota real; justificación de N con Do4 (criterio 3); actualizar README e informe |
+| Responsable | Monica |
+| Evidencia | `src/prueba_ruido.py`, `datos/resultados_ruido.csv`, salida de consola |
+
+## Entrada 15 — 23 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Mueve los samples de FL Studio a audio/originales/ y actualiza evaluar_reales.py" |
+| Objetivo | Documentar el origen del audio y su desviación respecto al plan v2, y colocarlo en la carpeta de evidencia de adquisición |
+| Parámetros | 36 WAV (12 notas × 3 dinámicas: pp suave, mf normal, ff fuerte) generados con un piano virtual en FL Studio; 44 100 Hz, estéreo, 16 bits; notación inglesa en el nombre de archivo |
+| Qué se probó | `git mv` de `samples marro piano/{pp,mf,ff}` a `audio/originales/` y del léeme a `audio/originales/LEEME_notacion_y_dinamicas.txt`; se corrió `src/evaluar_reales.py` de nuevo |
+| Resultado | Resultados idénticos a antes del movimiento (`datos/resultados_reales.csv` sin cambios byte a byte): reconocimiento 12/12 en las tres dinámicas; error < 5 cents en 10/12 (pp), 10/12 (mf) y 8/12 (ff) |
+| Fallo o aprendizaje | El plan v2 (sec. 2.5) fija como fuente un teclado o piano físico captado con el micrófono de la laptop. Se usa en su lugar un piano virtual, opción que la Declaración de PBL permite en "Actividades sugeridas" (p. 38: "teclado virtual en PC"). Los archivos se habían subido a una carpeta aparte y no a `audio/originales/`. El conjunto de referencia para los criterios de éxito son los 12 mf; pp y ff son variantes de dinámica. La fuente virtual no incluye ruido de micrófono ni de sala, y el ruido se evaluó aparte (Entrada 14). El sesgo de ~+4 cents puede deberse a la afinación de la fuente en FL Studio; sin verificar |
+| Decisión siguiente | Revisar en FL Studio la afinación del plugin de piano; reportar en el informe el error contra La4 = 440 Hz y, aparte, el relativo a la afinación propia del sample; actualizar el README |
+| Responsable | Monica (Rodrigo confirma el origen de los archivos) |
+| Evidencia | `audio/originales/`, `src/evaluar_reales.py`, `datos/resultados_reales.csv` |
+
+
+## Entrada 16 — 23 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/graficar_comparacion.py: espectros de las 12 notas y error en cents" |
+| Objetivo | Producir los espectros anotados y la comparación piano virtual vs. sintético que pide el informe (Declaración de PBL p. 38: espectros representativos anotados y notas con mayor error) |
+| Parámetros | 12 notas mf de `audio/originales/mf/` (44 100 Hz) contra los 12 sintéticos con armónicos (48 000 Hz); N = 32 768, Hann, rango 80–1000 Hz; espectros normalizados al pico de la banda de búsqueda |
+| Qué se probó | `src/graficar_comparacion.py`: cuadrícula 4×3 de espectros, barras de error por nota con banda de ±5 cents y zoom de ±10 Hz sobre Do4. Usa el mismo camino que `evaluacion.py` (pico, bajada a la fundamental, interpolación) |
+| Resultado | Sintético: error entre −0,43 y +0,42 cents en las 12 notas. Piano virtual mf: entre +0,37 y +7,58 cents, todos positivos; 10/12 bajo 5 cents. Mayor error: Do#4 (+7,58) y Sol#4 (+6,24). Figuras: `figuras/espectros_12_notas.png`, `figuras/error_cents_12_notas.png`, `figuras/zoom_Do4_real_vs_sintetico.png` |
+| Fallo o aprendizaje | En Re4, Re#4 y Mi4 del piano virtual el pico más alto de la banda es un armónico y no la fundamental, lo que muestra gráficamente por qué hace falta `bajar_a_fundamental`. Los armónicos altos del piano virtual quedan algo por encima de los sintéticos (posible inarmonicidad; sin medir). El sesgo positivo constante sigue sin explicación verificada: hipótesis, afinación de la fuente en FL Studio |
+| Decisión siguiente | Justificar N con Do4 (criterio 3); revisar la afinación del plugin en FL Studio; incorporar las figuras al informe |
+| Responsable | Monica |
+| Evidencia | `src/graficar_comparacion.py`, las tres figuras en `figuras/`, salida de consola |
+
+## Entrada 17 — 23 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/justificar_n.py: justificación de N con Do4" |
+| Objetivo | Cumplir el criterio 3: justificar el tamaño de ventana por la resolución necesaria para distinguir semitonos adyacentes, con Do4 como caso más exigente |
+| Parámetros | N = 4096, 8192, 16 384, 32 768 y 65 536; Do4 = 261,626 Hz (5 cents = 0,757 Hz; semitono = 15,56 Hz); Δf calculado con fs = 44 100 Hz; Do4 sintético (48 000 Hz) y Do4 mf del piano virtual |
+| Qué se probó | `src/justificar_n.py`: espaciado de bins, ancho del lóbulo de Hann (4 bins), duración consumida y error de f0 con bin crudo y con interpolación, en las dos fuentes |
+| Resultado | Con interpolación, Do4 queda bajo 5 cents con los cinco N (sintético −4,07 a −0,13; real −3,13 a +3,40). Sin interpolar, el error crudo supera 5 cents salvo con N = 65 536; con N = 32 768 el real da +5,35 cents crudo y +2,89 interpolado. Ancho de Hann: 43,1 / 21,5 / 10,8 / 5,4 / 2,7 Hz. Salida en `datos/justificacion_n.csv` y `figuras/n_vs_error_Do4.png` |
+| Fallo o aprendizaje | Argumento de la elección: (1) el lóbulo de Hann debe ser menor que el semitono de 15,56 Hz, lo que exige N ≥ 16 384; (2) N = 65 536 consumiría 1,49 s, más que los ~0,9 s útiles de una toma de 1 s, y solo se alcanzaría rellenando con ceros; (3) N = 32 768 (0,743 s, Δf = 1,35 Hz) es la mayor potencia de 2 que cabe y da más margen que 16 384. Es la opción A de la Tabla 7 del plan. Límites: el archivo real dura 40 s, así que su fila de N = 65 536 usa 1,49 s de señal y no es comparable con una toma corta; la fs difiere entre fuentes (48 000 vs. 44 100 Hz); el error real no baja de forma monótona con N y no se separó afinación de la fuente, decaimiento y ruido; la lectura de que N = 4096 apenas cumple sale de un solo caso |
+| Decisión siguiente | Redactar la justificación de N en el informe con estos números; repetir el análisis con más notas si hay tiempo; unificar la fs en README y plan (44 100 Hz) |
+| Responsable | Monica |
+| Evidencia | `src/justificar_n.py`, `datos/justificacion_n.csv`, `figuras/n_vs_error_Do4.png` |
