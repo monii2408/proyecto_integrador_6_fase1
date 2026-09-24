@@ -306,3 +306,18 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Compilar el informe (Overleaf) y confirmar el número de páginas; si excede 8, mover la Tabla 1 (justificación de N) a un anexo o recortar la Discusión; documentar la configuración del piano virtual en FL Studio; confirmar si existe presentación oral (criterio 8, no evaluable sin ella) |
 | Responsable | Monica |
 | Evidencia | `src/piso_ruido.py`, `src/graficar_tiempo.py`, `src/diagrama_bloques.py`, `datos/piso_ruido.csv`, `figuras/forma_onda_Do4_pp_mf_ff.png`, `figuras/diagrama_bloques.png`, `informe/informe.tex`, `Rúbrica PBL fase 1 Señales y sistemas.pdf` |
+
+
+## Entrada 21 — 24 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Recorta informe.tex a formato compacto: 14 -> ¿8? paginas, diagrama horizontal" |
+| Objetivo | El informe compilado dio 14 páginas, muy por encima del límite de 8 de la rúbrica (criterio 7). Recortar formato y contenido sin perder lo que la revisión externa ya calificó como fuerte (Tabla 1 de N, las tres figuras de espectros) |
+| Parámetros | Fuente 10pt (antes 11pt), márgenes 2,2 cm (antes 2,5 cm), `enumitem` con listas compactas, tablas en `\footnotesize` donde no eran ya `\small`, figuras ligeramente más pequeñas |
+| Qué se probó | Reescritura completa de `informe.tex`: tres ecuaciones no referenciadas (DFT, eje de frecuencias, Hann) pasadas a texto en línea; bloque de comandos de reproducibilidad cambiado por referencia al README; tabla de bitácora cambiada por un párrafo; subsección "Extensión del algoritmo" fusionada dentro de "Análisis de los errores"; "Montaje" y "Fuente de audio" fusionadas; se quitó la oración suelta "Pendiente: documentar la configuración de FL Studio" del cuerpo (ya estaba, mejor ubicada, en Limitaciones); se rediseñó `diagrama_bloques.py` de una columna de 7 cajas apiladas a una sola fila horizontal (razón de aspecto 6:1 en vez de 1:2) |
+| Resultado | El archivo fuente pasó de 641 a 489 líneas. No se pudo compilar (sin LaTeX instalado) para confirmar el número final de páginas; verificación estática (entornos, referencias, citas, figuras) sin errores. Se encontró y corrigió una referencia rota (`\ref{sec:pisoruido}` sin `\label` tras fusionar esa subsección) |
+| Fallo o aprendizaje | No poder compilar localmente es una limitación real de este entorno; el conteo de páginas depende de que el equipo compile en Overleaf y lo reporte. Si sigue por encima de 8, el siguiente recorte sería mover la Tabla 1 (justificación de N) a un anexo o quitar una de las tres figuras de la sección "Piano virtual" |
+| Decisión siguiente | Compilar en Overleaf y confirmar el número de páginas; si aún excede 8, recortar más |
+| Responsable | Monica |
+| Evidencia | `informe/informe.tex`, `src/diagrama_bloques.py`, `figuras/diagrama_bloques.png` |

@@ -10,38 +10,38 @@ RAIZ = os.path.join(os.path.dirname(__file__), "..")
 CARPETA_FIG = os.path.join(RAIZ, "figuras")
 
 PASOS = [
-    "Piano virtual (FL Studio)\n12 notas x 3 intensidades (pp, mf, ff)",
-    "Archivo WAV\n44 100 Hz, 16 bits, estéreo\naudio/originales/",
-    "Preprocesamiento\nmono, normalizar, detectar inicio (RMS),\nrecortar ataque (75 ms)",
-    "Ventana de Hann + FFT\nN = 32 768, Δf ≈ 1,35 Hz",
-    "Detección de pico (80-1000 Hz)\ny bajada a la fundamental (f/2, f/3, f/4)",
-    "Interpolación parabólica\nprecisión sub-bin",
-    "Identificación de nota + error en cents\ndatos/resultados_reales.csv",
+    "Piano virtual\n(FL Studio)",
+    "WAV\n44,1 kHz",
+    "Preproceso\n(inicio + ataque)",
+    "Hann + FFT\nN = 32 768",
+    "Pico +\nfundamental",
+    "Interpolación\nparabólica",
+    "Nota + error\n(cents)",
 ]
 
 
 def graficar_diagrama(ruta_png):
     """
-    Dibuja los pasos de PASOS como cajas conectadas por flechas, de arriba a abajo.
+    Dibuja los pasos de PASOS como cajas conectadas por flechas, en una sola
+    fila (de izquierda a derecha), para minimizar la altura de la figura.
     Entra: ruta_png (str).
     Sale: nada; guarda ruta_png.
     """
     n = len(PASOS)
-    fig, ax = plt.subplots(figsize=(5, 10))
+    fig, ax = plt.subplots(figsize=(12, 1.9))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    ys = [0.94 - i * (0.88 / (n - 1)) for i in range(n)]
-    for y, texto in zip(ys, PASOS):
-        ax.text(0.5, y, texto, ha="center", va="center", fontsize=9,
-                bbox=dict(boxstyle="round,pad=0.5", facecolor="#eaf2fb", edgecolor="tab:blue"))
-    for y_arriba, y_abajo in zip(ys[:-1], ys[1:]):
-        ax.annotate("", xy=(0.5, y_abajo + 0.045), xytext=(0.5, y_arriba - 0.045),
+    xs = [0.07 + i * (0.86 / (n - 1)) for i in range(n)]
+    for x, texto in zip(xs, PASOS):
+        ax.text(x, 0.5, texto, ha="center", va="center", fontsize=8.5,
+                bbox=dict(boxstyle="round,pad=0.4", facecolor="#eaf2fb", edgecolor="tab:blue"))
+    for x_izq, x_der in zip(xs[:-1], xs[1:]):
+        ax.annotate("", xy=(x_der - 0.058, 0.5), xytext=(x_izq + 0.058, 0.5),
                     arrowprops=dict(arrowstyle="->", color="tab:blue", linewidth=1.3))
 
-    fig.tight_layout()
-    fig.savefig(ruta_png, dpi=150)
+    fig.savefig(ruta_png, dpi=150, bbox_inches="tight", pad_inches=0.05)
     plt.close(fig)
 
 

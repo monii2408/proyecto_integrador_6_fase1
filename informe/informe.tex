@@ -1,13 +1,15 @@
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[margin=2.2cm]{geometry}
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage[backend=biber,style=numeric]{biblatex}
+\usepackage{enumitem}
+\setlist{itemsep=1pt, topsep=3pt, parsep=1pt}
 \addbibresource{bibliografia.bib}
 \graphicspath{{../figuras/}}
 
@@ -57,50 +59,27 @@ cinco veces ese contenido espectral, lo que permite además observar el caso
 --- frecuente en instrumentos reales --- en que un armónico aparece con
 mayor amplitud que la fundamental \cite{oppenheim2010,rossing1990science}.
 
-\subsection{Transformada discreta de Fourier (DFT/FFT)}
-Sobre cada segmento preprocesado de $N$ muestras se calcula la DFT
+\subsection{FFT, ventaneo de Hann e interpolación parabólica}
+Sobre cada segmento preprocesado de $N$ muestras se calcula la DFT,
+$X[k] = \sum_{n=0}^{N-1} x[n]\, e^{-j 2\pi k n / N}$, evaluada de forma
+eficiente con el algoritmo FFT (\texttt{np.fft.fft}); como la señal es
+real, solo se conservan los bins de 0 a $N/2$, con eje $f_k = k f_s / N$ y
+espaciado $\Delta f = f_s / N$. Con $N = 32\,768$ resulta $\Delta f \approx
+1{,}346$~Hz a 44\,100~Hz (1{,}465~Hz a 48\,000~Hz)
+\cite{oppenheim2010,smith2007mdft}. Conviene distinguir el espaciado de
+bins de la resolución física: esta la limita la duración $T$ del tramo
+observado (con unos 0{,}9~s útiles, $1/T \approx 1{,}1$~Hz), y rellenar con
+ceros produce más puntos de un espectro interpolado pero no añade
+información nueva.
 
-\begin{equation}
-  X[k] = \sum_{n=0}^{N-1} x[n]\, e^{-j 2\pi k n / N}, \qquad k = 0, \dots, N-1,
-\end{equation}
+Analizar un segmento finito equivale a multiplicarlo por una ventana
+rectangular, lo que produce fuga espectral (\emph{spectral leakage}) y
+dificulta separar la fundamental de picos vecinos. Se aplica en su lugar
+una ventana de Hann, $w[n] = 0{,}5 (1 - \cos(2\pi n / (N-1)))$, que reduce
+los lóbulos laterales a costa de ensanchar el lóbulo principal a cuatro
+bins ($4\,\Delta f$); es un compromiso favorable para localizar picos
+aislados \cite{harris1978windows}.
 
-evaluada de forma eficiente con el algoritmo FFT (\texttt{np.fft.fft}). Como
-la señal es real, el espectro es simétrico y solo se conservan los bins de
-0 a $N/2$. El eje de frecuencias correspondiente a cada bin $k$ es
-
-\begin{equation}
-  f_k = \frac{k \cdot f_s}{N},
-\end{equation}
-
-de modo que el espaciado entre bins es
-
-\begin{equation}
-  \Delta f = \frac{f_s}{N}.
-  \label{eq:df}
-\end{equation}
-
-Con $N = 32\,768$ resulta $\Delta f \approx 1{,}346$~Hz a 44\,100~Hz
-(1{,}465~Hz a 48\,000~Hz) \cite{oppenheim2010,smith2007mdft}. Conviene
-distinguir el espaciado de bins de la resolución física: esta última la
-limita la duración $T$ del tramo observado (con unos 0{,}9~s útiles,
-$1/T \approx 1{,}1$~Hz), y rellenar con ceros produce más puntos de un
-espectro interpolado pero no añade información nueva.
-
-\subsection{Ventaneo de Hann}
-Analizar un segmento finito de la señal equivale a multiplicarlo por una
-ventana rectangular, lo que produce fuga espectral (\emph{spectral leakage})
-y dificulta separar la fundamental de picos vecinos. Se aplica en su lugar
-una ventana de Hann,
-
-\begin{equation}
-  w[n] = 0{,}5 \left(1 - \cos\!\left(\frac{2\pi n}{N-1}\right)\right),
-\end{equation}
-
-que reduce los lóbulos laterales a costa de ensanchar el lóbulo
-principal, que ocupa cuatro bins ($4\,\Delta f$); es un compromiso favorable
-para localizar picos aislados \cite{harris1978windows}.
-
-\subsection{Interpolación parabólica del pico}
 \label{sec:interp}
 La resolución de bin no es suficiente por sí sola para cumplir el criterio
 de error de 5~cents en Do4, que equivale a $\approx 0{,}76$~Hz
@@ -121,15 +100,9 @@ es el desplazamiento del vértice respecto de ese bin \cite{smith2007mdft}.
 
 \subsection{Identificación de la nota y error en cents}
 La frecuencia de referencia de cada nota, según su número de tecla $n$ de
-piano, sigue el temperamento igual,
-
-\begin{equation}
-  f_n = 440 \cdot 2^{(n-49)/12} \; \text{Hz}, \qquad \text{La4} = 440~\text{Hz}
-  \;\; \cite{iso16-1975},
-\end{equation}
-
-y el error de la frecuencia detectada $f_0$ respecto de la tabla se expresa
-en cents (1/100 de semitono):
+piano, sigue el temperamento igual, $f_n = 440 \cdot 2^{(n-49)/12}$~Hz, con
+La4 $= 440$~Hz \cite{iso16-1975}, y el error de la frecuencia detectada
+$f_0$ respecto de la tabla se expresa en cents (1/100 de semitono):
 
 \begin{equation}
   \text{error}_{\text{cents}} = 1200 \cdot \log_2\!\left(\frac{f_0}{f_{\text{tabla}}}\right).
@@ -151,7 +124,7 @@ virtual.
 
 \begin{table}[ht]
   \centering
-  \small
+  \footnotesize
   \begin{tabular}{rrrrrrrr}
     \toprule
     & & & & \multicolumn{2}{c}{Bin crudo (cents)} & \multicolumn{2}{c}{Interpolado (cents)} \\
@@ -165,33 +138,26 @@ virtual.
     65536  &  0,67 &  2,69 & 1,486 & $-1{,}00$  & $+0{,}91$  & $-0{,}13$ & $+1{,}72$ \\
     \bottomrule
   \end{tabular}
-  \caption{Error de $f_0$ en Do4 según $N$. $\Delta f$, ancho de Hann y
-  $N/f_s$ se calculan con $f_s = 44\,100$~Hz; la columna \emph{Sint.} usa el
-  tono sintético (48\,000~Hz) y \emph{Piano} el audio del piano virtual. Con
-  $N = 65\,536$ el sintético, de 1~s, se rellena con ceros.
-  Fuente: \texttt{src/justificar\_n.py}.}
+  \caption{\footnotesize Error de $f_0$ en Do4 según $N$ ($f_s = 44\,100$~Hz;
+  \emph{Sint.} a 48\,000~Hz; con $N = 65\,536$ el sintético, de 1~s, se
+  rellena con ceros). Fuente: \texttt{src/justificar\_n.py}.}
   \label{tab:n}
 \end{table}
 
-Los datos apoyan tres conclusiones:
-
-\begin{enumerate}
-  \item \textbf{La interpolación es lo que cumple el criterio, no $N$.} Sin
-    interpolar, el error del bin crudo supera 5~cents en casi todos los
-    tamaños (hasta $-25$~cents con $N = 4096$); con la ecuación
-    (\ref{eq:interp}) queda por debajo de 5~cents en los cinco. Con
-    $N = 32\,768$ el piano da $+5{,}35$~cents sin interpolar y $+2{,}89$
-    con ella. (El error del bin crudo está acotado por $\Delta f/2$ respecto
-    de la frecuencia real del archivo; respecto de la tabla se suma la
-    desafinación propia de la fuente.)
-  \item \textbf{$N \ge 16\,384$ para distinguir semitonos adyacentes.} El
-    lóbulo principal de Hann debe ser menor que el semitono de 15{,}56~Hz
-    en Do4: con $N = 8192$ mide 21{,}5~Hz y con $N = 16\,384$, 10{,}8~Hz.
-  \item \textbf{$N \le 32\,768$ por la duración de la nota.} Una toma de
-    $\approx 1$~s deja unos 0{,}9~s útiles tras descartar el ataque;
-    $N = 32\,768$ consume 0{,}743~s, mientras que $N = 65\,536$ exigiría
-    1{,}49~s y solo se alcanzaría rellenando con ceros.
-\end{enumerate}
+Los datos apoyan tres conclusiones. \textbf{(1) La interpolación es lo que
+cumple el criterio, no $N$}: sin interpolar, el error del bin crudo supera
+5~cents en casi todos los tamaños (hasta $-25$~cents con $N = 4096$); con
+la ecuación~(\ref{eq:interp}) queda por debajo de 5~cents en los cinco. Con
+$N = 32\,768$ el piano da $+5{,}35$~cents sin interpolar y $+2{,}89$ con
+ella (el error del bin crudo está acotado por $\Delta f/2$ respecto de la
+frecuencia real del archivo; respecto de la tabla se suma la desafinación
+de la fuente). \textbf{(2) $N \ge 16\,384$ para distinguir semitonos
+adyacentes}: el lóbulo de Hann debe ser menor que el semitono de
+15{,}56~Hz en Do4 (con $N = 8192$ mide 21{,}5~Hz; con $N = 16\,384$,
+10{,}8~Hz). \textbf{(3) $N \le 32\,768$ por la duración de la nota}: una
+toma de $\approx 1$~s deja unos 0{,}9~s útiles tras descartar el ataque;
+$N = 32\,768$ consume 0{,}743~s, mientras que $N = 65\,536$ exigiría
+1{,}49~s y solo se alcanzaría rellenando con ceros.
 
 Se adopta por tanto $N = 32\,768$: es la mayor potencia de dos que cabe en
 la nota, da $\Delta f = 1{,}35$~Hz y deja más margen que $N = 16\,384$
@@ -204,145 +170,98 @@ incluye la desafinación de la fuente (Sección~\ref{sec:discusion}).
 \section{Metodología}
 \label{sec:metodologia}
 
-\subsection{Montaje del sistema}
+\subsection{Montaje y fuente de audio}
 \label{sec:montaje}
 La adquisición de esta Fase~1 es una cadena de software y no un circuito
-físico: no hay microcontrolador ni sensor propio, tal como lo define el plan
-de acción (Sección~2.1) y lo permite la Declaración de PBL para este
-proyecto. La Figura~\ref{fig:diagrama} muestra el montaje completo, de la
-fuente al resultado: el piano virtual exporta WAV a 44\,100~Hz, que se
-procesan en memoria por las etapas descritas más abajo hasta producir
-\texttt{datos/resultados\_reales.csv} (nota real, nota detectada, $f_0$,
-error en cents, acierto). La rúbrica de la Fase~1 aclara que, para los
-criterios de montaje, análisis en frecuencia y diseño experimental, un grupo
-que cumple los criterios de éxito propios de su proyecto se ubica como
-mínimo en el nivel Aceptable; este proyecto cumple el reconocimiento
-$\ge 90\,\%$ y, en \emph{mf} y \emph{pp}, el error $<5$~cents en $\ge 10$ de
-12 notas (Tabla~\ref{tab:criterios}).
+físico: no hay microcontrolador ni sensor propio, tal como lo define el
+plan de acción y lo permite la Declaración de PBL para este proyecto
+(actividades sugeridas: ``teclado virtual en PC''). La Figura~\ref{fig:diagrama}
+muestra el montaje completo, de la fuente al resultado. La rúbrica de la
+Fase~1 aclara que, para los criterios de montaje, análisis en frecuencia y
+diseño experimental, un grupo que cumple los criterios de éxito propios de
+su proyecto se ubica como mínimo en el nivel Aceptable; este proyecto
+cumple el reconocimiento $\ge 90\,\%$ y, en \emph{mf} y \emph{pp}, el error
+$<5$~cents en $\ge 10$ de 12 notas (Tabla~\ref{tab:criterios}).
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.55\textwidth]{diagrama_bloques.png}
-  \caption{Diagrama de bloques del sistema: de la fuente (piano virtual) al
-  resultado (nota, $f_0$ y error). El hardware se limita a la exportación de
-  audio; todo el análisis ocurre en software.}
+  \includegraphics[width=0.95\textwidth]{diagrama_bloques.png}
+  \caption{Diagrama de bloques del sistema. El hardware se limita a la
+  exportación de audio; todo el análisis ocurre en software.}
   \label{fig:diagrama}
 \end{figure}
 
-Pendiente: documentar la configuración exacta del piano virtual en
-FL~Studio (plugin, ajustes del sampler, parámetros de exportación), que no
-se registró al generar los archivos.
-
-\subsection{Fuente de audio}
-Las doce notas de la octava Do4--Si4 se generaron con un piano virtual en
-FL~Studio, en tres intensidades: normal (\emph{mf}), suave (\emph{pp}) y
-fuerte (\emph{ff}), lo que da 36 archivos WAV a 44\,100~Hz, 16~bits y
-estéreo. El conjunto de referencia para los criterios de éxito son las doce
-notas \emph{mf}; \emph{pp} y \emph{ff} se usan para evaluar la robustez frente
-a la intensidad. La consigna del curso permite explícitamente un teclado
-virtual como instrumento (Declaración de PBL, Fase~1, actividades sugeridas).
-El plan de acción inicial preveía un piano físico captado con el micrófono de
-la laptop; se cambió a una fuente virtual, que no incorpora ruido de
-micrófono ni de sala. El efecto del ruido se evaluó por separado con ruido
-sintético (Sección~\ref{sec:ruido}).
-
-Los WAV originales se conservan sin modificar en \texttt{audio/originales/}
-como evidencia de adquisición. El procesamiento se hace en memoria a partir
-de ellos y no reescribe los archivos. Las duraciones de los archivos varían
-entre 13 y 70~s y, en las notas fuertes, la nota puede empezar hasta cerca
-de 1~s después del inicio del archivo.
+Las doce notas se generaron con un piano virtual en FL~Studio, en tres
+intensidades: normal (\emph{mf}), suave (\emph{pp}) y fuerte (\emph{ff}) ---
+36 WAV a 44\,100~Hz, 16~bits, estéreo, en \texttt{audio/originales/} (evidencia
+de adquisición, sin modificar). El conjunto de referencia para los criterios
+de éxito son las doce notas \emph{mf}. El plan de acción inicial preveía un
+piano físico captado con micrófono; se cambió a fuente virtual, que no
+incorpora ruido de micrófono ni de sala (evaluado aparte,
+Sección~\ref{sec:ruido}). Las duraciones de los archivos varían entre 13 y
+70~s y, en las notas fuertes, la nota puede empezar hasta cerca de 1~s
+después del inicio del archivo.
 
 \subsection{Pipeline de procesamiento}
-El pipeline es el mismo para los tonos sintéticos (usados para validar el
-código antes de introducir señales de piano) y para el piano virtual:
-
+El pipeline es el mismo para los tonos sintéticos (validación previa) y
+para el piano virtual:
 \begin{enumerate}
-  \item \textbf{Preprocesamiento} (\texttt{preprocesamiento.py}): conversión a
-    mono, normalización a amplitud máxima 1, detección del inicio real de la
-    nota y recorte. El inicio se toma en la primera ventana de 10~ms cuyo
-    valor RMS supera el 10~\% del RMS máximo; desde ahí se descartan 75~ms
-    de ataque (el golpe de la tecla, con transitorios no periódicos que
-    ensuciarían el espectro).
-  \item \textbf{Espectro} (\texttt{espectro.py}): ventana de Hann sobre las
-    primeras $N = 32\,768$ muestras y FFT (Sección~\ref{sec:modelo}).
-  \item \textbf{Detección de pico} (\texttt{deteccion.py}): máximo de
-    magnitud en la banda 80--1000~Hz, que cubre las fundamentales de Do4 a
-    Si4.
-  \item \textbf{Bajada a la fundamental}: si hay un pico de al menos el
-    25~\% de la magnitud del máximo en su frecuencia dividida por 2, 3 o 4
-    (tolerancia del 3~\%), ese es la fundamental y el máximo era un armónico.
-    Se toma el de menor frecuencia que cumpla la condición.
-  \item \textbf{Refinamiento sub-bin}: interpolación parabólica,
-    ecuación~(\ref{eq:interp}).
-  \item \textbf{Identificación y error}: nota más cercana de la tabla y error
-    según la ecuación~(\ref{eq:cents}).
+  \item \textbf{Preprocesamiento} (\texttt{preprocesamiento.py}): mono,
+    normalización a amplitud máxima 1, detección del inicio real de la nota
+    (primera ventana de 10~ms con RMS $>10\,\%$ del máximo) y recorte de
+    75~ms de ataque desde ahí.
+  \item \textbf{Espectro} (\texttt{espectro.py}): Hann sobre las primeras
+    $N = 32\,768$ muestras y FFT.
+  \item \textbf{Pico} (\texttt{deteccion.py}): máximo de magnitud en
+    80--1000~Hz.
+  \item \textbf{Bajada a la fundamental}: si hay un pico $\ge 25\,\%$ del
+    máximo en su frecuencia dividida por 2, 3 o 4 (tolerancia $3\,\%$), ese
+    es la fundamental.
+  \item \textbf{Interpolación parabólica}, ecuación~(\ref{eq:interp}).
+  \item \textbf{Identificación y error}, ecuación~(\ref{eq:cents}).
 \end{enumerate}
-
 Los pasos 1 y 4 no estaban en el diseño inicial: aparecieron al evaluar el
 piano virtual (Sección~\ref{sec:resultados}).
 
 \subsection{Representación en el tiempo}
 \label{sec:tiempo}
 La Figura~\ref{fig:tiempo} muestra la forma de onda normalizada de Do4 en
-las tres intensidades, con el inicio detectado (paso 1 del pipeline) y los
-75~ms de ataque descartados. Las tres condiciones se distinguen con
-claridad: el inicio detectado pasa de 80~ms en \emph{pp} a 450~ms en
-\emph{mf} y 1060~ms en \emph{ff}, y la envolvente de amplitud decae más
-lento cuanto más fuerte es la intensidad.
-
-En \emph{pp} se observa un matiz: antes del ataque perceptible de la nota
-($\approx 0{,}33$~s) hay un zumbido de bajo nivel que ya supera el umbral del
-10~\% usado por \texttt{detectar\_inicio}, de modo que el inicio detectado
-(80~ms) queda antes del ataque real. Como $N = 32\,768$ muestras cubren
-0{,}743~s desde ese punto, el ataque real de $\approx 0{,}33$~s sí queda
-dentro del tramo analizado. Es coherente con que \emph{pp} tenga la mayor
-desviación estándar del error de las tres intensidades
-(Sección~\ref{sec:pisoruido}); no se confirmó como causa única.
+las tres intensidades, con el inicio detectado y el ataque descartado. Las
+condiciones se distinguen con claridad: el inicio pasa de 80~ms (\emph{pp})
+a 450~ms (\emph{mf}) y 1060~ms (\emph{ff}), y la envolvente decae más lento
+cuanto más fuerte la intensidad. En \emph{pp} hay un matiz: antes del
+ataque perceptible ($\approx 0{,}33$~s) existe un zumbido de bajo nivel que
+ya supera el umbral del 10~\%, por lo que el inicio detectado (80~ms) queda
+antes del ataque real, que sí cae dentro del tramo analizado
+($N = 32\,768$ cubre 0{,}743~s desde ese punto); es coherente con que
+\emph{pp} tenga la mayor desviación estándar del error de las tres
+intensidades (Sección~\ref{sec:ruido}), aunque no se confirmó como
+causa única.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.85\textwidth]{forma_onda_Do4_pp_mf_ff.png}
+  \includegraphics[width=0.72\textwidth]{forma_onda_Do4_pp_mf_ff.png}
   \caption{Forma de onda normalizada de Do4 en pp, mf y ff (primeros 1,5~s),
-  con el inicio detectado y el ataque descartado. Fuente:
-  \texttt{src/graficar\_tiempo.py}.}
+  con el inicio detectado y el ataque descartado.}
   \label{fig:tiempo}
 \end{figure}
 
-\subsection{Reproducibilidad}
-\label{sec:reproducibilidad}
+\subsection{Validación con señales de control y reproducibilidad}
+Antes de usar el piano virtual se validó el pipeline con tonos sintéticos
+de frecuencia exacta conocida: si el pipeline falla con una señal cuya
+respuesta correcta se conoce, el error está en el código; si el sintético
+pasa y el audio real falla, el problema está en la señal. Se generaron 12
+senoides puras y 12 tonos con la fundamental y cuatro armónicos (amplitudes
+relativas 1; 0,6; 0,4; 0,25; 0,15), de 1~s a 48\,000~Hz. La robustez frente
+al ruido se midió sumando ruido blanco gaussiano a los tonos con armónicos,
+SNR de $+40$ a $-30$~dB, 20 repeticiones por nota y nivel, semilla fija.
+
 Cada número de este informe se obtiene ejecutando el repositorio con
-Python~3.13 (\texttt{requirements.txt} fija NumPy, SciPy, Matplotlib y
-sounddevice; con Python~3.14 la instalación falla porque SciPy 1.15.3 no
-tiene versión precompilada, ver bitácora entrada~18):
-
-\begin{verbatim}
-py -3.13 -m venv .venv
-.venv\Scripts\activate
-python -m pip install -r requirements.txt
-python src/evaluacion.py          # 12 sinteticos -> resultados.csv
-python src/evaluar_reales.py      # 36 WAV -> resultados_reales.csv
-python src/prueba_ruido.py        # robustez SNR -> resultados_ruido.csv
-python src/piso_ruido.py          # piso de ruido y repetibilidad
-python src/justificar_n.py        # Tabla 1 (N vs. error en Do4)
-python src/graficar_comparacion.py
-python src/graficar_tiempo.py
-python src/diagrama_bloques.py
-\end{verbatim}
-
-Verificado en un segundo equipo con las mismas versiones fijadas: los
-archivos \texttt{resultados.csv} y \texttt{resultados\_reales.csv} salen
-idénticos, byte a byte, a los obtenidos en el equipo original.
-
-\subsection{Validación con señales de control}
-Antes de usar el piano virtual se validó el pipeline con tonos sintéticos de
-frecuencia exacta conocida: un tono sintético sirve como caso de control, de
-modo que si el pipeline falla sobre él el error está en el código, y si el
-sintético pasa y el audio real falla, el problema está en la señal y no en
-el algoritmo. Se generaron 12 senoides puras y 12 tonos con la fundamental y
-cuatro armónicos (amplitudes relativas 1; 0,6; 0,4; 0,25; 0,15), de 1~s a
-48\,000~Hz. La robustez frente al ruido se midió sumando ruido blanco
-gaussiano a los tonos con armónicos, con relación señal/ruido (SNR) de
-$+40$ a $-30$~dB, 20 repeticiones por nota y nivel y semilla fija.
+Python~3.13 (\texttt{requirements.txt}; con Python~3.14 falla la
+instalación de SciPy, ver bitácora entrada~18); los comandos exactos y la
+lista de scripts están en \texttt{README.md}. Verificado en un segundo
+equipo con las mismas versiones: \texttt{resultados.csv} y
+\texttt{resultados\_reales.csv} salen idénticos, byte a byte.
 
 \section{Resultados}
 \label{sec:resultados}
@@ -351,33 +270,13 @@ $+40$ a $-30$~dB, 20 repeticiones por nota y nivel y semilla fija.
 Las doce senoides puras y los doce tonos con armónicos se identifican
 correctamente (12/12), con un error máximo de 0{,}43~cents (Do\#4) y de
 0{,}42~cents en Do4. Ninguno confunde la fundamental con un armónico, ni
-siquiera Si4, cuyo segundo armónico ($\approx 988$~Hz) cae dentro de la banda
-de búsqueda.
+siquiera Si4, cuyo segundo armónico ($\approx 988$~Hz) cae dentro de la
+banda de búsqueda.
 
 \subsection{Piano virtual}
-La Tabla~\ref{tab:mf} recoge el resultado de las doce notas \emph{mf}, y la
-Tabla~\ref{tab:din} resume las tres intensidades.
-
-\begin{table}[ht]
-  \centering
-  \small
-  \begin{tabular}{lrrrlrr}
-    \toprule
-    Nota & $f_0$ (Hz) & Error (cents) & & Nota & $f_0$ (Hz) & Error (cents) \\
-    \midrule
-    Do4  & 262,062 & $+2{,}89$ & & Fa\#4 & 370,694 & $+3{,}27$ \\
-    Do\#4 & 278,398 & $+7{,}58$ & & Sol4  & 392,978 & $+4{,}34$ \\
-    Re4  & 293,728 & $+0{,}37$ & & Sol\#4 & 416,804 & $+6{,}24$ \\
-    Re\#4 & 311,962 & $+4{,}64$ & & La4   & 440,954 & $+3{,}75$ \\
-    Mi4  & 330,532 & $+4{,}75$ & & La\#4 & 467,186 & $+3{,}79$ \\
-    Fa4  & 349,885 & $+3{,}25$ & & Si4   & 494,710 & $+2{,}89$ \\
-    \bottomrule
-  \end{tabular}
-  \caption{Resultado de las doce notas del piano virtual con intensidad
-  \emph{mf}. Las doce se identifican correctamente. Fuente:
-  \texttt{datos/resultados\_reales.csv}.}
-  \label{tab:mf}
-\end{table}
+La Tabla~\ref{tab:din} resume el reconocimiento y el error por intensidad
+(el detalle de las 12 notas \emph{mf} está en
+\texttt{datos/resultados\_reales.csv} y en la Figura~\ref{fig:errores}).
 
 \begin{table}[ht]
   \centering
@@ -396,25 +295,25 @@ Tabla~\ref{tab:din} resume las tres intensidades.
   \label{tab:din}
 \end{table}
 
-La Figura~\ref{fig:espectros} muestra el espectro de las doce notas, con el
-del piano virtual superpuesto al sintético, y la Figura~\ref{fig:errores} el
-error por nota frente a la banda de $\pm 5$~cents. La Figura~\ref{fig:zoom}
-amplía el pico de Do4.
+La Figura~\ref{fig:espectros} muestra el espectro de las doce notas
+(piano virtual superpuesto al sintético), la Figura~\ref{fig:errores} el
+error por nota frente a la banda de $\pm 5$~cents, y la
+Figura~\ref{fig:zoom} amplía el pico de Do4.
 
 \begin{figure}[p]
   \centering
-  \includegraphics[width=0.92\textwidth]{espectros_12_notas.png}
+  \includegraphics[width=0.82\textwidth]{espectros_12_notas.png}
   \caption{Espectros de las doce notas (Hann, $N = 32\,768$, escala
   logarítmica): piano virtual \emph{mf} (azul) y tono sintético con
-  armónicos (naranja). La banda verde es el rango de búsqueda 80--1000~Hz y
-  la línea punteada la frecuencia de la tabla. En Re4, Re\#4 y Mi4 el pico
-  más alto de la banda no es la fundamental sino un armónico.}
+  armónicos (naranja). Banda verde: rango de búsqueda 80--1000~Hz; línea
+  punteada: frecuencia de tabla. En Re4, Re\#4 y Mi4 el pico más alto de la
+  banda no es la fundamental sino un armónico.}
   \label{fig:espectros}
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.9\textwidth]{error_cents_12_notas.png}
+  \includegraphics[width=0.78\textwidth]{error_cents_12_notas.png}
   \caption{Error de $f_0$ por nota respecto de La4 $= 440$~Hz: sintético y
   piano virtual \emph{mf}. La banda verde marca el criterio de $\pm 5$~cents.}
   \label{fig:errores}
@@ -422,118 +321,79 @@ amplía el pico de Do4.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.75\textwidth]{zoom_Do4_real_vs_sintetico.png}
+  \includegraphics[width=0.62\textwidth]{zoom_Do4_real_vs_sintetico.png}
   \caption{Zoom de $\pm 10$~Hz sobre la fundamental de Do4. Cada punto es un
   bin de la FFT; las líneas verticales son el $f_0$ tras interpolar.}
   \label{fig:zoom}
 \end{figure}
 
 \subsection{Primer ensayo, sin correcciones}
-Con el pipeline tal como se validó con los sintéticos (descartando 75~ms
-fijos desde el inicio del archivo y tomando el pico máximo), el piano virtual
-dio un reconocimiento de 11/12 (\emph{pp}), 9/12 (\emph{mf}) y 6/12
-(\emph{ff}), con error menor que 5~cents en 5, 6 y 3 notas. El análisis
-espectral de los casos fallidos mostró dos causas independientes:
+Con el pipeline tal como se validó con los sintéticos (75~ms fijos desde el
+inicio del archivo, pico máximo simple), el piano virtual dio un
+reconocimiento de 11/12 (\emph{pp}), 9/12 (\emph{mf}) y 6/12 (\emph{ff}),
+con error $<5$~cents en 5, 6 y 3 notas. Dos causas independientes:
+\emph{silencio antes de la nota} (en \emph{ff} el sonido empieza hacia 1~s;
+el descarte fijo analizaba silencio y el pico caía en 80--150~Hz) y
+\emph{armónico dominante} (en Do4 \emph{pp} el 2.\textordmasculine{} armónico
+tiene magnitud 2026 frente a 874 de la fundamental, y en Re4 \emph{mf} 1423
+frente a 974; el máximo de la banda daba una octava --- o una duodécima,
+en Mi4 --- por encima). Las dos correcciones (detección del inicio y
+bajada a la fundamental) llevaron el reconocimiento a 12/12 en las tres
+intensidades; los sintéticos siguen dando 12/12.
 
-\begin{itemize}
-  \item \textbf{Silencio antes de la nota.} En las notas \emph{ff} el sonido
-    empieza hacia 1~s; el descarte fijo analizaba silencio, la FFT veía ruido de
-    baja amplitud y el pico caía en 80--150~Hz.
-  \item \textbf{Armónico dominante.} En Do4 \emph{pp} el segundo armónico tiene
-    una magnitud de 2026 frente a 874 de la fundamental, y en Re4 \emph{mf}
-    1423 frente a 974; el máximo de la banda daba una nota una octava (o una
-    duodécima, en Mi4) por encima.
-\end{itemize}
-
-Las dos correcciones descritas en la Sección~\ref{sec:metodologia}
-(detección del inicio y bajada a la fundamental) llevaron el reconocimiento a
-12/12 en las tres intensidades; los sintéticos siguen dando 12/12.
-
-\subsection{Robustez frente al ruido}
+\subsection{Robustez: ruido sintético, piso real y repetibilidad}
 \label{sec:ruido}
-La Tabla~\ref{tab:ruido} muestra el resultado sobre los tonos sintéticos con
-armónicos. El sistema no pierde ninguna nota hasta $-10$~dB, es decir, con
-ruido de potencia diez veces mayor que la de la señal, y falla entre $-10$ y
-$-20$~dB.
+La Tabla~\ref{tab:ruido} muestra el resultado sobre los tonos sintéticos
+con armónicos y ruido blanco gaussiano. El sistema no pierde ninguna nota
+hasta $-10$~dB (ruido diez veces más potente que la señal) y falla entre
+$-10$ y $-20$~dB; se explica por la longitud de la FFT, que concentra la
+energía del tono en pocos bins frente a los $N/2 = 16\,384$ del ruido
+blanco.
 
 \begin{table}[ht]
   \centering
-  \small
+  \footnotesize
   \begin{tabular}{rrrr}
     \toprule
     SNR (dB) & Reconocimiento & Error medio (cents) & Error máx. (cents) \\
     \midrule
-    $+40$ & 100,0~\% & 0,25 & 0,43 \\
-    $+30$ & 100,0~\% & 0,25 & 0,43 \\
-    $+20$ & 100,0~\% & 0,25 & 0,44 \\
-    $+10$ & 100,0~\% & 0,25 & 0,46 \\
-    $+5$  & 100,0~\% & 0,25 & 0,51 \\
-    $0$   & 100,0~\% & 0,25 & 0,64 \\
+    $+40$ a $0$ & 100,0~\% & 0,25 & 0,43 a 0,64 \\
     $-10$ & 100,0~\% & 0,28 & 0,87 \\
     $-20$ &  68,3~\% & 643,9 & 2490,6 \\
     $-30$ &   8,3~\% & 1853,5 & 3059,0 \\
     \bottomrule
   \end{tabular}
-  \caption{Robustez frente a ruido blanco gaussiano (12 notas con armónicos,
-  20 repeticiones por nota y nivel, semilla 2026). Fuente:
+  \caption{\footnotesize Robustez frente a ruido blanco (12 notas con
+  armónicos, 20 repeticiones por nota y nivel). Fuente:
   \texttt{datos/resultados\_ruido.csv}.}
   \label{tab:ruido}
 \end{table}
 
-La robustez se explica por la longitud de la FFT: la energía de un tono se
-concentra en pocos bins, mientras que el ruido blanco se reparte entre los
-$N/2 = 16\,384$ bins del espectro unilateral.
-
-\subsection{Piso de ruido real, variabilidad y repetibilidad}
-\label{sec:pisoruido}
-Además del ruido blanco sintético se midió el piso de ruido propio de los
-archivos: el tramo anterior al inicio detectado de la nota. Solo las notas
-\emph{ff} tienen suficiente margen previo para medirlo con $N = 32\,768$
-(7 de 12, $\ge 0{,}743$~s); \emph{pp} y \emph{mf} empiezan casi en la
-primera muestra. El piso medio es de $-52{,}2$~dBFS, con una razón
-señal/ruido media de $69{,}0$~dB entre el pico de la fundamental y el pico
-del tramo de silencio en la banda 80--1000~Hz (fuente:
-\texttt{datos/piso\_ruido.csv}, \texttt{src/piso\_ruido.py}). Ese margen
-está muy por encima del punto de falla observado con ruido sintético
-($-10$ a $-20$~dB, Tabla~\ref{tab:ruido}).
-
-La Tabla~\ref{tab:din} reportaba solo la media y el máximo del error; la
-desviación estándar del error por intensidad (12 notas cada una) es
-$2{,}53$~cents (\emph{pp}), $1{,}72$~cents (\emph{mf}) y $1{,}56$~cents
-(\emph{ff}) --- mayor en \emph{pp}, consistente con la observación de la
-Sección~\ref{sec:tiempo}.
-
-El pipeline no tiene elementos aleatorios ni captura en vivo: cinco
-ejecuciones sobre el mismo archivo (Do4 \emph{mf}) dan exactamente el mismo
-$f_0$ (262{,}062192~Hz, desviación estándar $0$), como corresponde a un
-cálculo determinista sobre un archivo fijo.
+Además del ruido sintético se midió el piso de ruido propio de los
+archivos (tramo anterior al inicio detectado). Solo \emph{ff} tiene margen
+previo suficiente para medirlo con $N = 32\,768$ (7 de 12 notas); el piso
+medio es $-52{,}2$~dBFS, con razón señal/ruido media de $69{,}0$~dB entre
+el pico de la fundamental y el pico del tramo de silencio en la banda
+80--1000~Hz (\texttt{src/piso\_ruido.py}), muy por encima del punto de
+falla con ruido sintético. La desviación estándar del error por intensidad
+(12 notas cada una, complementa la Tabla~\ref{tab:din}) es $2{,}53$
+(\emph{pp}), $1{,}72$ (\emph{mf}) y $1{,}56$~cents (\emph{ff}). El
+pipeline no tiene elementos aleatorios: cinco ejecuciones sobre el mismo
+archivo (Do4 \emph{mf}) dan exactamente el mismo $f_0$ (262{,}062192~Hz,
+desviación estándar $0$), como corresponde a un cálculo determinista sobre
+un archivo fijo.
 
 \subsection{Bitácora de iteraciones}
-El registro completo, fechado, con parámetros, resultados y aprendizajes de
-cada cambio --- incluidos los que empeoraron un resultado --- está en
-\texttt{bitacora/bitacora.md}, entregado junto con este informe. La
-Tabla~\ref{tab:bitacora} resume las iteraciones que cambiaron un resultado
-numérico.
-
-\begin{table}[ht]
-  \centering
-  \small
-  \begin{tabular}{p{1.7cm}p{10.7cm}}
-    \toprule
-    Entrada & Cambio y efecto \\
-    \midrule
-    07--09 & Pipeline de extremo a extremo sobre sintéticos: bin crudo $\approx 3{,}8$~cents, interpolado $<1$~cent en las 12 notas; 100~\% de reconocimiento. \\
-    10 & Prueba con armónicos sintéticos: mismo error que las senoides puras; ninguna confusión de octava. \\
-    12 & Primer ensayo sobre el piano virtual, sin corregir: reconocimiento 11/12 (\emph{pp}), 9/12 (\emph{mf}), 6/12 (\emph{ff}). \\
-    13 & Con la detección de inicio, antes de sumar la bajada a la fundamental, dos notas de \emph{pp} que acertaban por coincidencia con el pipeline original pasaron a fallar; con ambas correcciones juntas, reconocimiento 12/12 en las tres intensidades. \\
-    14 & Robustez frente a ruido blanco: 100~\% de reconocimiento hasta $-10$~dB de SNR. \\
-    17 & Justificación de $N$ con Do4 (Tabla~\ref{tab:n}). \\
-    \bottomrule
-  \end{tabular}
-  \caption{Resumen de las iteraciones que cambiaron un resultado numérico.
-  Registro completo en \texttt{bitacora/bitacora.md} (20 entradas).}
-  \label{tab:bitacora}
-\end{table}
+El registro completo, fechado, con parámetros, resultados y fallos
+documentados --- incluidos los que empeoraron un resultado --- está en
+\texttt{bitacora/bitacora.md} (21 entradas), entregado junto con este
+informe. En resumen: las Entradas 07--09 validaron el pipeline sobre
+sintéticos (interpolado $<1$~cent, 100~\% de reconocimiento); la Entrada 12
+mostró el primer ensayo fallido sobre el piano virtual; la Entrada 13
+documenta que, al sumar solo la detección de inicio (antes de la bajada a
+la fundamental), dos notas de \emph{pp} que acertaban por coincidencia
+pasaron a fallar, hasta sumar ambas correcciones (12/12); la Entrada 14
+cubre la robustez al ruido y la Entrada 17 la justificación de $N$.
 
 \section{Discusión}
 \label{sec:discusion}
@@ -541,16 +401,16 @@ numérico.
 \subsection{Cumplimiento de los criterios de éxito}
 \begin{table}[ht]
   \centering
-  \small
-  \begin{tabular}{p{5.6cm}p{8.4cm}}
+  \footnotesize
+  \begin{tabular}{p{5.4cm}p{8.4cm}}
     \toprule
     Criterio & Estado \\
     \midrule
     Reconocimiento $\ge 90$~\% en las 12 notas & Cumplido: 12/12 en \emph{pp}, \emph{mf} y \emph{ff}, con audio de un piano virtual limpio (sin ruido de micrófono ni de sala). \\
     Error $<5$~cents en $\ge 10$ de 12 notas & Cumplido en \emph{mf} y \emph{pp} (10/12). No cumplido en \emph{ff} (8/12). \\
     Justificar $N$ con Do4 & Cumplido, Sección~\ref{sec:n}. \\
-    Resultados reproducibles & Cada resultado se obtiene ejecutando los scripts del repositorio (README). Verificado con las versiones fijadas en \texttt{requirements.txt} (Python 3.13) en un equipo; falta repetirlo desde un clon limpio en el otro equipo. \\
-    Bitácora & 20 entradas, con los errores y modificaciones del sistema; resumen en la Tabla~\ref{tab:bitacora}, registro completo adjunto. \\
+    Resultados reproducibles & Verificado con las versiones fijadas de \texttt{requirements.txt} (Python 3.13) en un segundo equipo: \texttt{resultados.csv} y \texttt{resultados\_reales.csv} idénticos byte a byte. \\
+    Bitácora & 21 entradas; resumen en Sección~\ref{sec:resultados}, registro completo adjunto. \\
     \bottomrule
   \end{tabular}
   \caption{Estado de los criterios de éxito de la Fase~1.}
@@ -559,52 +419,40 @@ numérico.
 
 \subsection{Análisis de los errores}
 Las dos notas con mayor error son Do\#4 ($+7{,}58$~cents) y Sol\#4
-($+6{,}24$~cents) con la intensidad \emph{mf}, y también son las más
-desviadas en \emph{pp} y \emph{ff}. Como se repiten en las tres intensidades,
-el error parece propio de la fuente y no del ruido aleatorio.
+($+6{,}24$~cents) en \emph{mf}, también las más desviadas en \emph{pp} y
+\emph{ff}; como se repiten en las tres intensidades, el error parece propio
+de la fuente y no del ruido aleatorio.
 
 El hallazgo principal es un \textbf{sesgo positivo}: las doce notas del
-piano virtual dan un error positivo, de $+0{,}37$ a $+7{,}58$~cents, con
-media de $+3{,}98$~cents en \emph{mf}. Con los tonos sintéticos el error es
-de $\pm 0{,}43$~cents o menos, y el ruido añadido tampoco lo reproduce
-(Tabla~\ref{tab:ruido}), de modo que la interpolación y la FFT no lo
-explican. La hipótesis más probable es que el instrumento virtual no esté
-afinado exactamente a La4 $= 440$~Hz: un La4 de 441~Hz equivale a
-$+3{,}9$~cents, del orden del sesgo observado. \emph{Esta hipótesis no se
-verificó}: requiere revisar la afinación del complemento en FL~Studio.
-Por eso el error respecto de la tabla de 440~Hz mide a la vez el algoritmo y
-la afinación de la fuente, y el criterio de 5~cents queda ajustado en las
-notas más desviadas (Do\#4 y Sol\#4).
+piano virtual dan un error positivo, de $+0{,}37$ a $+7{,}58$~cents
+(media $+3{,}98$~cents en \emph{mf}). Con los tonos sintéticos el error es
+de $\pm 0{,}43$~cents o menos, y el ruido añadido tampoco lo reproduce, de
+modo que la interpolación y la FFT no lo explican. La hipótesis más
+probable es que el instrumento virtual no esté afinado exactamente a
+La4 $= 440$~Hz (un La4 de 441~Hz equivale a $+3{,}9$~cents, del orden del
+sesgo observado); \emph{no se verificó}, requiere revisar la afinación del
+complemento en FL~Studio. Por eso el error respecto de la tabla de 440~Hz
+mide a la vez el algoritmo y la afinación de la fuente. En los espectros
+del piano virtual los armónicos superiores quedan algo por encima de las
+posiciones $k f_0$ de los sintéticos (Figura~\ref{fig:espectros}), quizá
+por inarmonicidad propia de las cuerdas; no se midió.
 
-En los espectros del piano virtual los armónicos superiores quedan algo por
-encima de las posiciones $k f_0$ de los sintéticos (Figura~\ref{fig:espectros}).
-Podría tratarse de la inarmonicidad propia de las cuerdas de un piano, pero
-no se midió.
-
-\subsection{Extensión del algoritmo respecto de la consigna}
-La consigna propone localizar el pico de mayor magnitud e interpolar. Se
-añadió la bajada a la fundamental porque en el piano virtual el segundo o el
-tercer armónico puede superar a la fundamental, y con el máximo simple la
-nota se identificaba una octava por encima. Es una extensión, no un
-reemplazo: la interpolación se sigue aplicando sobre el pico elegido.
+Respecto de la consigna original (localizar el pico máximo e interpolar),
+la bajada a la fundamental es una extensión, no un reemplazo: se añadió
+porque en el piano virtual un armónico puede superar a la fundamental, y la
+interpolación se sigue aplicando sobre el pico ya corregido.
 
 \subsection{Limitaciones}
 \begin{itemize}
-  \item La fuente es un piano virtual: no incluye ruido de micrófono, de sala
-    ni la respuesta del equipo de captura. El pipeline no se ha probado con
-    una grabación acústica real.
-  \item El ruido evaluado es blanco. El ruido de una habitación es más grave
-    y puede caer dentro de la banda de búsqueda; no se probó.
+  \item La fuente es un piano virtual, sin ruido de micrófono, de sala ni
+    respuesta del equipo de captura; el pipeline no se ha probado con una
+    grabación acústica real, y no se documentó la configuración del
+    complemento en FL~Studio (Sección~\ref{sec:montaje}).
+  \item El ruido evaluado es blanco; el de una habitación es más grave y
+    podría caer dentro de la banda de búsqueda. El piso de ruido real solo
+    se midió en \emph{ff} (única con silencio previo suficiente).
   \item Se usó un solo instrumento virtual y un solo archivo por nota e
-    intensidad.
-  \item El análisis de $N$ se hizo con Do4 y un archivo por fuente; con más
-    notas se podría confirmar cuán general es la conclusión.
-  \item No se documentó la configuración del piano virtual en FL~Studio
-    (plugin, ajustes del sampler, parámetros de exportación), señalada en la
-    Sección~\ref{sec:montaje}.
-  \item El piso de ruido solo se midió en las notas \emph{ff}, que son las
-    únicas con silencio previo suficiente; no hay una medición equivalente
-    en \emph{pp} y \emph{mf}.
+    intensidad; el análisis de $N$ se hizo solo con Do4.
 \end{itemize}
 
 \section{Conclusiones}
@@ -613,28 +461,28 @@ reemplazo: la interpolación se sigue aplicando sobre el pico elegido.
     interpolación parabólica) identifica las doce notas Do4--Si4 del piano
     virtual en las tres intensidades y con error menor que 5~cents en 10 de
     12 notas con intensidad media.
-  \item La interpolación parabólica es lo que hace alcanzable el criterio de
-    5~cents; el tamaño de la FFT se eligió por el semitono (lóbulo de Hann
-    menor que 15{,}56~Hz en Do4, $N \ge 16\,384$) y por la duración de la
-    nota ($N \le 32\,768$).
+  \item La interpolación parabólica es lo que hace alcanzable el criterio
+    de 5~cents; el tamaño de la FFT se eligió por el semitono (lóbulo de
+    Hann menor que 15{,}56~Hz en Do4, $N \ge 16\,384$) y por la duración de
+    la nota ($N \le 32\,768$).
   \item Evaluar primero con tonos sintéticos permitió atribuir los fallos
     con el piano a la señal y no al código: silencio antes de la nota y
-    armónico dominante. Ambos se resolvieron con la detección del inicio y
-    la bajada a la fundamental.
+    armónico dominante, resueltos con la detección del inicio y la bajada
+    a la fundamental.
   \item Queda un sesgo de $\approx +4$~cents en el audio del piano virtual,
     cuya causa (probablemente la afinación de la fuente) no se verificó, y
     el criterio de 5~cents no se cumple con la intensidad fuerte.
-  \item Para la Fase~2 se reutiliza este pipeline. La lección que se traslada
-    es distinguir el error del algoritmo del error de la señal, y validar
-    primero con una señal de respuesta conocida.
+  \item Para la Fase~2 se reutiliza este pipeline. La lección que se
+    traslada es distinguir el error del algoritmo del error de la señal, y
+    validar primero con una señal de respuesta conocida.
 \end{enumerate}
 
 \section*{Uso de herramientas de inteligencia artificial}
-Se utilizó Claude (Anthropic), incluido Claude Code, para revisar la estructura
-del plan frente a la rúbrica, asistir en la escritura y revisión del código y
-de los scripts de figuras, y producir un borrador de este informe. Las
-decisiones de diseño, la ejecución del código y la verificación de los
-resultados son responsabilidad de los integrantes.
+Se utilizó Claude (Anthropic), incluido Claude Code, para revisar la
+estructura del plan frente a la rúbrica, asistir en la escritura y revisión
+del código y de los scripts de figuras, y producir un borrador de este
+informe. Las decisiones de diseño, la ejecución del código y la
+verificación de los resultados son responsabilidad de los integrantes.
 
 \printbibliography
 
