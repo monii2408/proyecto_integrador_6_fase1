@@ -291,3 +291,18 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Guion del video con `analizar_nota.py --figura`; retomar la revisión del informe cuando el equipo la traiga con cambios |
 | Responsable | Monica |
 | Evidencia | `src/analizar_nota.py`, `figuras/analisis_Piano.mf.D4.png`, salida de consola |
+
+
+## Entrada 20 — 24 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega piso de ruido, figura de tiempo, diagrama de bloques y refuerza informe.tex contra la rúbrica" |
+| Objetivo | Responder a una revisión externa del informe (hecha contra "Rúbrica PBL fase 1 Señales y sistemas.pdf", que el equipo compartió y que se leyó completa por primera vez esta sesión) y cerrar brechas verificables en los criterios 1, 2, 4, 6 y 7 de esa rúbrica |
+| Parámetros | Rúbrica: 8 criterios, pesos 15/15/20/15/10/5/10/10 %, escala 1–4. Nota de aplicación relevante: un grupo que cumple los criterios de éxito propios de su proyecto se ubica, como mínimo, en Aceptable (3) en los criterios 1, 3 y 4 |
+| Qué se probó | `src/piso_ruido.py` (piso de ruido del segmento previo al inicio detectado, desviación estándar del error por intensidad, repetibilidad de 5 corridas sobre el mismo archivo); `src/graficar_tiempo.py` (forma de onda de Do4 en pp/mf/ff); `src/diagrama_bloques.py` (diagrama de la cadena software); y la incorporación de todo esto a `informe/informe.tex` |
+| Resultado | Piso de ruido: solo 7/12 notas ff tienen silencio medible (≥0,743 s); piso medio −52,2 dBFS, razón señal/ruido media 69,0 dB, muy por encima del punto de falla con ruido sintético (−10 a −20 dB). Desviación estándar del error: 2,53 (pp), 1,72 (mf), 1,56 (ff) cents. Repetibilidad: 5 corridas sobre Do4 mf dan el mismo f0 (262,062192 Hz), desviación 0, pipeline determinista. Hallazgo no buscado: en pp Do4 hay un zumbido de bajo nivel antes del ataque real (~0,33 s) que dispara el umbral del 10 % a los 80 ms, dejando el ataque real dentro de la ventana analizada; coincide con que pp tenga la mayor desviación estándar de las tres intensidades, sin confirmarse como causa única |
+| Fallo o aprendizaje | La revisión externa asignó Nivel 2 al criterio de montaje, pero la rúbrica real (que no se había leído hasta ahora) dice que cumplir los criterios de éxito propios del proyecto garantiza como mínimo Nivel 3 en ese criterio; falta solo documentar el montaje, no alcanzar un nivel mínimo. La revisión también atribuyó una brecha del criterio 2 a la falta de integración/derivación, pero el texto literal de la rúbrica para Sobresaliente exige "gráficas de tiempo que distinguen las condiciones estudiadas", que sí faltaba (el informe solo tenía espectros) y es lo que se agregó. El informe pasó de 503 a 641 líneas fuente; no se pudo compilar (sin LaTeX instalado) para confirmar el número de páginas, y la rúbrica exige ≤ 8 |
+| Decisión siguiente | Compilar el informe (Overleaf) y confirmar el número de páginas; si excede 8, mover la Tabla 1 (justificación de N) a un anexo o recortar la Discusión; documentar la configuración del piano virtual en FL Studio; confirmar si existe presentación oral (criterio 8, no evaluable sin ella) |
+| Responsable | Monica |
+| Evidencia | `src/piso_ruido.py`, `src/graficar_tiempo.py`, `src/diagrama_bloques.py`, `datos/piso_ruido.csv`, `figuras/forma_onda_Do4_pp_mf_ff.png`, `figuras/diagrama_bloques.png`, `informe/informe.tex`, `Rúbrica PBL fase 1 Señales y sistemas.pdf` |
