@@ -261,3 +261,18 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Redactar la justificación de N en el informe con estos números; repetir el análisis con más notas si hay tiempo; unificar la fs en README y plan (44 100 Hz) |
 | Responsable | Monica |
 | Evidencia | `src/justificar_n.py`, `datos/justificacion_n.csv`, `figuras/n_vs_error_Do4.png` |
+
+
+## Entrada 18 — 23 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega src/analizar_nota.py: demo de análisis de un WAV" |
+| Objetivo | Tener un comando que reciba un WAV cualquiera y devuelva nota detectada, f0 y error en cents sin saber de antemano qué nota es (criterio de cierre de la Sesión 3 del plan) y que sirva de escena central del video de demostración |
+| Parámetros | Mismo pipeline de `evaluacion.py` (N = 32 768, Hann, rango 80–1000 Hz, descarte de ataque 75 ms desde el inicio real, bajada a la fundamental); argumento opcional `--esperada` para comprobar el acierto |
+| Qué se probó | `python src/analizar_nota.py <wav> [--esperada Nota]` sobre Do4 mf, Re4 mf (donde el armónico supera a la fundamental), La4 sintético con nota esperada equivocada a propósito, y la invocación sin argumentos. Ejecutado también en el equipo de Monica con el `.venv` de Python 3.13 y las versiones de `requirements.txt` |
+| Resultado | Do4 mf: 262,062 Hz, Do4, +2,89 cents, CORRECTO. Re4 mf: 293,728 Hz, Re4, +0,37 cents, CORRECTO. La4 sintético con esperada Sol4: detecta La4 (439,930 Hz, −0,28 cents) y marca INCORRECTO. Sin argumentos: muestra el uso. Los valores coinciden con `datos/resultados_reales.csv` y `datos/resultados.csv` |
+| Fallo o aprendizaje | (1) `pip install -r requirements.txt` falló con Python 3.14 porque SciPy 1.15.3 no tiene versión precompilada para 3.14 y pip intentó compilarlo desde el código fuente (pide compilador de Fortran). Se resolvió creando el `.venv` con Python 3.13. Con esas versiones fijadas los resultados de reales y sintéticos son idénticos a los calculados con NumPy 2.4.3 / SciPy 1.17.1 (verificado). (2) Los WAV de FL Studio traen un bloque de metadatos que SciPy se salta con un aviso (`WavFileWarning`); no afecta al audio y se silencia solo en `analizar_nota.py`. No se probó el aviso de resultado no fiable (f0 a casi medio semitono de la tabla) |
+| Decisión siguiente | Actualizar el README (versión de Python soportada, comandos de ejecución); decidir si se silencia el aviso también en `preprocesamiento.py`; completar `informe.tex` |
+| Responsable | Monica |
+| Evidencia | `src/analizar_nota.py`, salida de consola en el equipo de Monica |
