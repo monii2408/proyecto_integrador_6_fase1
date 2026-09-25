@@ -321,3 +321,18 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Compilar en Overleaf y confirmar el número de páginas; si aún excede 8, recortar más |
 | Responsable | Monica |
 | Evidencia | `informe/informe.tex`, `src/diagrama_bloques.py`, `figuras/diagrama_bloques.png` |
+
+
+## Entrada 22 — 25 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Sincroniza informe.tex con la version compilada (portada estilo Plan, indice, corrige ecuacion ??)" |
+| Objetivo | El equipo rediseñó el informe con portada y pie de página al estilo visual del Plan de Acción (paleta KeyNavy/KeyGray, `titlesec`, `tocloft`), agregó índice automático y una nueva subsección "Cambios respecto al Plan de Acción"; sincronizar esa versión (ya compilada a PDF por el equipo) con el repositorio |
+| Parámetros | `titlepage` con Instituto/Curso/Proyecto/Integrantes/Docente/Fecha/Entregable; `\tableofcontents`; nueva Tabla 3 "Principales diferencias entre el diseño inicial y la implementación final" (fuente de señal, inicio de nota, selección de pico, selección de N); Discusión ampliada con "Interpretación de los resultados" y "Transferencia a la Fase 2" |
+| Qué se probó | El equipo compiló `informe_fase1.pdf`: portada e índice correctos, 9 páginas numeradas (índice = pág. 1, contenido = págs. 2–9) más la portada sin numerar. Se encontró "ecuación (??)" en el paso 5 del pipeline (Sección 3.2): la ecuación de interpolación parabólica (Sección 2.4) no tenía `\label{eq:interp}` en la versión compilada, aunque sí lo tenía la versión guardada en el repo en la sesión anterior — el equipo había seguido editando desde una copia sin ese arreglo |
+| Resultado | Se agregó `\label{eq:interp}` a la ecuación de la Sección 2.4 y se guardó la versión completa (portada, índice, tabla de cambios, discusión ampliada) en `informe/informe.tex`. Verificación estática: entornos balanceados, todas las referencias resueltas, todas las citas en `bibliografia.bib`, las 4 figuras usadas existen |
+| Fallo o aprendizaje | El conteo de páginas es ambiguo frente al límite de 8 de la rúbrica: si portada e índice no cuentan, el cuerpo mide exactamente 8 páginas (2–9); si cuentan, son 9 o 10. No aclarado por la rúbrica; pendiente de confirmar con el docente |
+| Decisión siguiente | Confirmar con el docente si portada/índice cuentan contra el límite de 8 páginas; si es necesario, recortar 1 página de margen (p. ej. la Tabla 3 nueva o la Sección 5.2 ampliada) |
+| Responsable | Monica (con cambios del equipo) |
+| Evidencia | `informe/informe.tex`, `informe_fase1.pdf` (fuera del repo, en la carpeta del proyecto) |
