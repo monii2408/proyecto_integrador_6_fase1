@@ -2,6 +2,7 @@
 
 import csv
 import os
+from datetime import datetime, timezone
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,6 +22,7 @@ CAMPOS_CSV = [
     "n", "delta_f_hz", "delta_f_cents", "ancho_hann_hz", "duracion_s",
     "muestras_disponibles_sint", "muestras_disponibles_real",
     "err_crudo_sint", "err_interp_sint", "err_crudo_real", "err_interp_real",
+    "generado_en",
 ]
 
 
@@ -108,6 +110,10 @@ if __name__ == "__main__":
         )
     print(f"Muestras disponibles tras preprocesar: sintético={filas[0]['muestras_disponibles_sint']}, "
           f"real={filas[0]['muestras_disponibles_real']}")
+
+    marca = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    for fila in filas:
+        fila["generado_en"] = marca
 
     ruta_csv = os.path.join(RAIZ, "datos", "justificacion_n.csv")
     with open(ruta_csv, "w", newline="") as archivo:

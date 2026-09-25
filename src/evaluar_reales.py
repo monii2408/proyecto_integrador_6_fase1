@@ -2,6 +2,7 @@
 
 import csv
 import os
+from datetime import datetime, timezone
 
 from evaluacion import evaluar_nota
 from notas import tabla_notas
@@ -15,7 +16,7 @@ INGLES_A_LATINA = {
     "C4": "Do4", "Db4": "Do#4", "D4": "Re4", "Eb4": "Re#4", "E4": "Mi4", "F4": "Fa4",
     "Gb4": "Fa#4", "G4": "Sol4", "Ab4": "Sol#4", "A4": "La4", "Bb4": "La#4", "B4": "Si4",
 }
-CAMPOS_CSV = ["dinamica", "nota_real", "nota_detectada", "f0_hz", "error_cents", "acierto"]
+CAMPOS_CSV = ["dinamica", "nota_real", "nota_detectada", "f0_hz", "error_cents", "acierto", "generado_en"]
 
 
 def evaluar_dinamica(dinamica, tabla):
@@ -60,6 +61,10 @@ if __name__ == "__main__":
             )
         tasa, bajo_5 = resumen(filas)
         print(f"Reconocimiento: {tasa * 100:.1f}% | error < 5 cents en {bajo_5}/12 notas")
+
+    marca = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    for fila in todas:
+        fila["generado_en"] = marca
 
     ruta_csv = os.path.join(RAIZ, "datos", "resultados_reales.csv")
     with open(ruta_csv, "w", newline="") as archivo:

@@ -2,6 +2,7 @@
 
 import csv
 import os
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -15,7 +16,7 @@ from preprocesamiento import cargar_audio, detectar_inicio, normalizar
 RAIZ = os.path.join(os.path.dirname(__file__), "..")
 DINAMICAS = ["pp", "mf", "ff"]
 CAMPOS_CSV = ["dinamica", "nota", "silencio_s", "piso_dbfs", "pico_ruido_mag",
-              "pico_senal_mag", "razon_senal_ruido_db"]
+              "pico_senal_mag", "razon_senal_ruido_db", "generado_en"]
 
 
 def segmento_silencio(ruta_wav):
@@ -120,6 +121,10 @@ if __name__ == "__main__":
         print(f"{d}: {len(del_d)} notas con silencio previo | "
               f"piso medio = {np.mean(dbfs):.1f} dBFS | "
               f"razón señal/ruido media = {np.mean(razon):.1f} dB")
+
+    marca = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    for fila in filas:
+        fila["generado_en"] = marca
 
     ruta_csv = os.path.join(RAIZ, "datos", "piso_ruido.csv")
     with open(ruta_csv, "w", newline="") as archivo:

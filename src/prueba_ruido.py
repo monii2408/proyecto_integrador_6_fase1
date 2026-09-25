@@ -2,6 +2,7 @@
 
 import csv
 import os
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -16,7 +17,7 @@ CARPETA = os.path.join(RAIZ, "audio", "sinteticos", "armonicos")
 SNRS_DB = [40, 30, 20, 10, 5, 0, -10, -20, -30]
 REPETICIONES = 20
 SEMILLA = 2026  # semilla fija: el resultado se reproduce igual en otro equipo
-CAMPOS_CSV = ["snr_db", "tasa_reconocimiento", "error_max_cents", "error_medio_cents"]
+CAMPOS_CSV = ["snr_db", "tasa_reconocimiento", "error_max_cents", "error_medio_cents", "generado_en"]
 
 
 def agregar_ruido(senal, snr_db, rng):
@@ -66,6 +67,10 @@ if __name__ == "__main__":
             f"SNR {snr:>2} dB: reconocimiento={fila['tasa_reconocimiento'] * 100:5.1f}% | "
             f"error medio={fila['error_medio_cents']:.2f} cents | max={fila['error_max_cents']:.2f} cents"
         )
+
+    marca = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    for fila in filas:
+        fila["generado_en"] = marca
 
     ruta_csv = os.path.join(RAIZ, "datos", "resultados_ruido.csv")
     with open(ruta_csv, "w", newline="") as archivo:

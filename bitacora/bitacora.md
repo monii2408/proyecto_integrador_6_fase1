@@ -336,3 +336,18 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Confirmar con el docente si portada/índice cuentan contra el límite de 8 páginas; si es necesario, recortar 1 página de margen (p. ej. la Tabla 3 nueva o la Sección 5.2 ampliada) |
 | Responsable | Monica (con cambios del equipo) |
 | Evidencia | `informe/informe.tex`, `informe_fase1.pdf` (fuera del repo, en la carpeta del proyecto) |
+
+
+## Entrada 23 — 25 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Agrega marcas de tiempo (generado_en) a los CSV de resultados" |
+| Objetivo | Revisión sistemática contra el Criterio 1 de la rúbrica ("Sobresaliente"): exige que "los datos se almacenan correctamente en CSV con marcas de tiempo". Ningún CSV del proyecto tenía esa columna |
+| Parámetros | Columna `generado_en` (timestamp UTC, ISO 8601, `datetime.now(timezone.utc).isoformat(timespec="seconds")`), agregada al final de `CAMPOS_CSV` en los 5 scripts que escriben resultados; una sola marca por ejecución (no por fila, ya que todas las filas de una corrida se generan en el mismo instante lógico) |
+| Qué se probó | Se re-ejecutaron los 5 scripts (`evaluacion.py`, `evaluar_reales.py`, `justificar_n.py`, `piso_ruido.py`, `prueba_ruido.py`) tras el cambio |
+| Resultado | Los 5 CSV (`resultados.csv`, `resultados_reales.csv`, `justificacion_n.csv`, `piso_ruido.csv`, `resultados_ruido.csv`) ahora incluyen `generado_en`. Todos los valores numéricos salieron idénticos a los de antes del cambio (100 %, 10/12, 10/12, 8/12, mismos valores de ruido y repetibilidad): el cambio es puramente aditivo |
+| Fallo o aprendizaje | Ninguno. Revisando el resto del Criterio 1 (montaje, fotos, punto de medición): sigue faltando documentar la configuración del piano virtual en FL Studio (plugin, ajustes del sampler) — no se puede completar sin esa información del equipo |
+| Decisión siguiente | Revisar sistemáticamente los criterios 2 a 8 de la rúbrica contra el informe y el repositorio |
+| Responsable | Monica |
+| Evidencia | `src/evaluacion.py`, `src/evaluar_reales.py`, `src/justificar_n.py`, `src/piso_ruido.py`, `src/prueba_ruido.py`, los 5 CSV en `datos/` |

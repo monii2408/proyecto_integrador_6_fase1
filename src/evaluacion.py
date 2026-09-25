@@ -2,6 +2,7 @@
 
 import csv
 import os
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -10,7 +11,7 @@ from espectro import espectro
 from notas import tabla_notas
 from preprocesamiento import preprocesar
 
-CAMPOS_CSV = ["nota_real", "nota_detectada", "f0_hz", "error_cents", "acierto"]
+CAMPOS_CSV = ["nota_real", "nota_detectada", "f0_hz", "error_cents", "acierto", "generado_en"]
 
 
 def error_cents(f_medida, f_tabla):
@@ -72,14 +73,18 @@ def evaluar_conjunto(carpeta, tabla=None):
 
 def guardar_csv(resultados, ruta_csv):
     """
-    Guarda los resultados como CSV (nota_real, nota_detectada, f0_hz, error_cents, acierto).
+    Guarda los resultados como CSV (nota_real, nota_detectada, f0_hz, error_cents,
+    acierto, generado_en). generado_en es la marca de tiempo de esta ejecución
+    (UTC, ISO 8601), igual para todas las filas: se corre una sola vez por evaluación.
     Entra: resultados (list[dict]), ruta_csv (str).
     Sale: nada; crea/sobrescribe el archivo.
     """
+    marca = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    filas = [{**r, "generado_en": marca} for r in resultados]
     with open(ruta_csv, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=CAMPOS_CSV)
         writer.writeheader()
-        writer.writerows(resultados)
+        writer.writerows(filas)
 
 
 if __name__ == "__main__":
