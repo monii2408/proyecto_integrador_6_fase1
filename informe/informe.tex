@@ -205,7 +205,7 @@ piano virtual cuya causa no se pudo verificar (Sección~\ref{sec:discusion}).
 \textbf{Idea clave.}
 La señal debe muestrearse a una frecuencia suficientemente alta para representar la
 fundamental y sus armónicos sin aliasing. En este proyecto, la frecuencia de muestreo
-utilizada supera ampliamente el mínimo requerido.
+utilizada supera ampliamente el mínimo requerido (Tabla~\ref{tab:muestreo}).
 
 \begin{table}[ht]
   \centering
@@ -344,7 +344,8 @@ Usar $N=65\,536$ exigiría 1,49~s de señal o relleno con ceros.
 \subsection{Fuente y flujo de procesamiento}
 La fuente son 36 archivos WAV generados en FL~Studio: 12 notas Do4--Si4 en tres
 condiciones (\emph{pp}, \emph{mf}, \emph{ff}), a 44\,100~Hz, 16~bits y estéreo.
-Los originales se conservan sin modificar en \texttt{audio/originales/}.
+Los originales se conservan sin modificar en \texttt{audio/originales/}. La
+Figura~\ref{fig:diagrama} resume el flujo completo del sistema.
 
 \begin{figure}[ht]
   \centering
@@ -389,7 +390,7 @@ la envolvente cambia con la condición de ejecución.
 
 La implementación final mantuvo la arquitectura general de análisis espectral
 planteada en el Plan de Acción, pero introdujo cambios a partir de las pruebas
-realizadas.
+realizadas (Tabla~\ref{tab:cambios_plan}).
 
 \begin{table}[ht]
   \centering
@@ -439,7 +440,7 @@ resultados fueron reproducidos en un segundo equipo con las mismas versiones.
 \subsection{Desempeño general}
 Los 12 tonos sintéticos se identificaron correctamente, con error máximo de
 0,43~cents. En el piano virtual también se obtuvo 12/12 de reconocimiento en las tres
-condiciones.
+condiciones (Tabla~\ref{tab:din}).
 
 \begin{table}[ht]
   \centering
@@ -457,6 +458,11 @@ condiciones.
   \caption{Resumen del desempeño por condición. Errores en cents.}
   \label{tab:din}
 \end{table}
+
+La Figura~\ref{fig:espectros} muestra el espectro de las doce notas y la
+Figura~\ref{fig:errores} el error de $f_0$ por nota frente al criterio de
+$\pm5$~cents.
+
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.8\textwidth]{espectros_12_notas.png}
@@ -488,7 +494,7 @@ intensidades; los sintéticos siguen dando 12/12.
 \subsection{Robustez frente al ruido}
 \label{sec:ruido}
 El sistema mantiene 100~\% de reconocimiento hasta $-10$~dB y pierde estabilidad entre
-$-10$ y $-20$~dB.
+$-10$ y $-20$~dB (Tabla~\ref{tab:ruido}).
 
 \begin{table}[ht]
   \centering
@@ -522,6 +528,7 @@ fallido con el piano, las correcciones del pipeline y las pruebas de ruido.
 \label{sec:discusion}
 
 \subsection{Cumplimiento de criterios}
+La Tabla~\ref{tab:criterios} resume el estado de cada criterio de éxito.
 \begin{table}[ht]
   \centering
   \footnotesize

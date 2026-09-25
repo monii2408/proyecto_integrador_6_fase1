@@ -351,3 +351,18 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Revisar sistemáticamente los criterios 2 a 8 de la rúbrica contra el informe y el repositorio |
 | Responsable | Monica |
 | Evidencia | `src/evaluacion.py`, `src/evaluar_reales.py`, `src/justificar_n.py`, `src/piso_ruido.py`, `src/prueba_ruido.py`, los 5 CSV en `datos/` |
+
+
+## Entrada 24 — 25 de septiembre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Commit: "Referencia en el texto todas las figuras y tablas del informe (Criterio 7)" |
+| Objetivo | Revisión sistemática contra el Criterio 7 de la rúbrica ("informe... con figuras legibles y referenciadas"). Siete figuras/tablas tenían `\label` pero ningún `\ref` en el texto: fig:diagrama, tab:muestreo, tab:din, fig:espectros, fig:errores, tab:ruido, tab:criterios, tab:cambios_plan |
+| Parámetros | Una oración corta por cada una, insertada donde ya existía texto relacionado (p. ej. "la frecuencia de muestreo... supera el mínimo requerido (Tabla~\ref{tab:muestreo})"), sin agregar contenido nuevo ni cambiar números |
+| Qué se probó | Verificación estática: comparación de `\label` contra `\ref`/`\eqref` en todo el archivo |
+| Resultado | 0 figuras o tablas sin referenciar (antes eran 8, incluyendo tab:cambios_plan encontrada en una segunda pasada). Entornos balanceados, sin referencias rotas |
+| Fallo o aprendizaje | Ninguno |
+| Decisión siguiente | Revisar los criterios 2, 3, 5, 6 y 8 restantes de la rúbrica |
+| Responsable | Monica |
+| Evidencia | `informe/informe.tex` |
