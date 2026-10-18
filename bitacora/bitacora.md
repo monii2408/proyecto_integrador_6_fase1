@@ -366,3 +366,17 @@ con sus parámetros, resultados, fallos y aprendizajes. **Se registra también l
 | Decisión siguiente | Revisar los criterios 2, 3, 5, 6 y 8 restantes de la rúbrica |
 | Responsable | Monica |
 | Evidencia | `informe/informe.tex` |
+
+## Entrada 25 — 17 de octubre de 2026
+
+| Campo | Contenido |
+|---|---|
+| Versión | Pendiente de commit (sin hash todavía) |
+| Objetivo | Cerrar la decisión pendiente de fs y N (informe, sec. 3.1 / Tabla 1) y dejarla registrada con su argumento |
+| Parámetros | fs = 44 100 Hz (unificada), N = 32 768, ventana de Hann, rango 80–1000 Hz, descarte de ataque 75 ms desde el inicio detectado. Δf = 1,35 Hz; N = 32 768 equivale a 0,743 s de señal |
+| Qué se probó | No hubo experimento nuevo. Se revisó la evidencia ya registrada: entrada 02 (fs = 44,1 kHz con N = 4096 y 8192 da Δf de 10,77 y 5,38 Hz) y entrada 17 (`justificar_n.py`: el lóbulo de Hann debe ser menor que el semitono de 15,56 Hz, lo que exige N ≥ 16 384; N = 65 536 consume 1,49 s y no cabe en una toma de ~1 s útil) |
+| Resultado | Se elige la opción A de la Tabla 7 del plan (muestreo alto, FFT grande) con N = 32 768 y fs = 44 100 Hz. Esto cierra la decisión que la entrada 02 había dejado en 48 kHz y la entrada 17 propuso unificar en 44,1 kHz |
+| Fallo o aprendizaje | Quedó un conflicto documental: `CLAUDE.md` (tabla de decisiones), la entrada 02 y los sintéticos de `audio/sinteticos/` usan 48 000 Hz; las grabaciones de piano virtual de `audio/originales/` usan 44 100 Hz. Mientras no se regeneren los sintéticos, el pipeline usa la fs de cada WAV, por lo que el resultado no cambia, pero hay que verificarlo en el código y no asumirlo |
+| Decisión siguiente | Actualizar `CLAUDE.md`, el README y `informe/informe.tex` para que digan 44 100 Hz; decidir si se regeneran los sintéticos a 44 100 Hz para que todo quede a una sola fs; repetir `evaluacion.py` y `justificar_n.py` tras el cambio y confirmar que los números no cambian |
+| Responsable | Ambos integrantes (decisión del equipo; falta confirmación de Rodrigo) |
+| Evidencia | Entradas 02 y 17 de esta bitácora; `src/justificar_n.py`, `datos/justificacion_n.csv`, `figuras/n_vs_error_Do4.png`; Tabla 7 del plan |
